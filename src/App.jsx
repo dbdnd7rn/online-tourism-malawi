@@ -26,7 +26,9 @@ import {
   X,
 } from 'lucide-react'
 import { Link, NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import { events, heritageItems, images, museums, performances, podcasts } from './data/content'
+import { useAuth } from './context/AuthContext'
+import { useContent } from './context/ContentContext'
+import { images } from './data/content'
 
 const navigation = [
   { label: 'Home', to: '/' },
@@ -61,6 +63,7 @@ function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const navigate = useNavigate()
+  const { user, signOut } = useAuth()
   const closeOverlays = () => { setMenuOpen(false); setSearchOpen(false) }
 
   const submitSearch = (event) => {
@@ -86,7 +89,11 @@ function Header() {
             <button className="icon-button search-trigger" onClick={() => setSearchOpen((value) => !value)} aria-label="Search" aria-expanded={searchOpen}>
               {searchOpen ? <X size={19} /> : <Search size={19} />}
             </button>
-            <Link className="button button--gold button--small sign-in-link" to="/sign-in" onClick={closeOverlays}>Sign in</Link>
+            {user ? (
+              <button className="account-pill sign-in-link" onClick={signOut} title="Sign out">
+                <span>{user.email?.slice(0, 1).toUpperCase()}</span>{user.email?.split('@')[0]}
+              </button>
+            ) : <Link className="button button--gold button--small sign-in-link" to="/sign-in" onClick={closeOverlays}>Sign in</Link>}
             <button className="icon-button menu-trigger" onClick={() => setMenuOpen((value) => !value)} aria-label="Open menu" aria-expanded={menuOpen}>
               {menuOpen ? <X size={21} /> : <Menu size={21} />}
             </button>
@@ -188,6 +195,7 @@ function PageHero({ eyebrow, title, copy, image, imageAlt, children, tall = fals
 }
 
 function HomePage() {
+  const { events } = useContent()
   const [query, setQuery] = useState('')
   const navigate = useNavigate()
   const submit = (event) => { event.preventDefault(); navigate(query.trim() ? `/explore?q=${encodeURIComponent(query.trim())}` : '/explore') }
@@ -288,6 +296,7 @@ function Newsletter() {
 }
 
 function ExplorePage() {
+  const { heritageItems } = useContent()
   const location = useLocation()
   const initialQuery = new URLSearchParams(location.search).get('q') || ''
   const [filter, setFilter] = useState('All')
@@ -297,7 +306,7 @@ function ExplorePage() {
     const typeMatch = filter === 'All' || item.type === filter
     const queryMatch = `${item.title} ${item.location} ${item.type}`.toLowerCase().includes(query.toLowerCase())
     return typeMatch && queryMatch
-  }), [filter, query])
+  }), [filter, query, heritageItems])
   return (
     <>
       <PageHero eyebrow="Explore Malawi" title={<>Arts & Natural<br /><em>Heritage</em></>} copy="Follow the stories written into Malawiâ€™s rock, water, forests and highlands." image={images.mulanje} imageAlt="Mount Mulanje rising over the landscape" tall />
@@ -337,6 +346,7 @@ function EmptyState() {
 }
 
 function MuseumsPage() {
+  const { museums } = useContent()
   return (
     <>
       <PageHero eyebrow="Places of memory" title={<>Museums &<br /><em>Collections</em></>} copy="Meet the keepers, objects and archives that carry Malawiâ€™s histories forward." image={images.karonga} imageAlt="A museum collection in Malawi">
@@ -366,6 +376,7 @@ function MuseumsPage() {
 }
 
 function PerformancePage() {
+  const { performances } = useContent()
   const [active, setActive] = useState(0)
   const current = performances[active]
   return (
@@ -405,6 +416,7 @@ function EventCard({ event }) {
 }
 
 function EventsPage() {
+  const { events } = useContent()
   const [filter, setFilter] = useState('All events')
   const types = ['All events', 'Festival', 'Culture', 'Arts', 'Music', 'Heritage', 'Film']
   const visible = filter === 'All events' ? events : events.filter((event) => event.type === filter)
@@ -450,6 +462,7 @@ function AboutPage() {
 }
 
 function MediaPage() {
+  const { podcasts } = useContent()
   const [playing, setPlaying] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const selected = podcasts[playing]
@@ -486,22 +499,56 @@ function MediaPage() {
 function SignInPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [magicSent, setMagicSent] = useState(false)
+  const { user, configured, signIn, sendMagicLink } = useAuth()
+
+  const handleSignIn = async (event) => {
+    event.preventDefault()
+    setBusy(true)
+    setError('')
+    try {
+      await signIn(email, password)
+      setSubmitted(true)
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Unable to sign in')
+    } finally { setBusy(false) }
+  }
+
+  const handleMagicLink = async () => {
+    if (!email) { setError('Enter your email address first.'); return }
+    setBusy(true)
+    setError('')
+    try {
+      await sendMagicLink(email)
+      setMagicSent(true)
+      if (!configured) setSubmitted(true)
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Unable to send a magic link')
+    } finally { setBusy(false) }
+  }
+
   return (
     <section className="auth-page">
       <Picture src={images.lakeSunset} alt="Lake Malawi at sunset" className="auth-page__image" />
       <div className="auth-page__veil" />
       <div className="auth-page__brand"><MalawiMark /><Link to="/"><ArrowLeft size={17} />Back to Malawi</Link></div>
       <div className="auth-card">
-        {submitted ? <div className="auth-success"><span><Check size={27} /></span><Eyebrow>Welcome back</Eyebrow><h1>Your journey<br /><em>continues.</em></h1><p>This is a frontend demonstration. Authentication can be connected when the backend is ready.</p><Link to="/explore" className="button button--gold">Continue exploring <ArrowRight size={18} /></Link></div> : <>
+        {submitted || user ? <div className="auth-success"><span><Check size={27} /></span><Eyebrow>Welcome back</Eyebrow><h1>Your journey<br /><em>continues.</em></h1><p>{configured ? `Signed in securely as ${user?.email || email}.` : 'Preview session active. Add the Supabase environment keys to enable secure production authentication.'}</p><Link to="/explore" className="button button--gold">Continue exploring <ArrowRight size={18} /></Link></div> : <>
           <Eyebrow>Member access</Eyebrow><h1>Welcome<br /><em>back.</em></h1><p>Sign in to save stories, build collections and continue listening.</p>
-          <form onSubmit={(e) => { e.preventDefault(); setSubmitted(true) }}>
-            <label>Email address<input type="email" required placeholder="you@example.com" /></label>
-            <label>Password<span className="password-field"><input type={showPassword ? 'text' : 'password'} required minLength="6" placeholder="Enter your password" /><button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></span></label>
+          <span className={`auth-mode ${configured ? 'auth-mode--live' : ''}`}>{configured ? 'Secure authentication connected' : 'Preview mode Â· backend keys pending'}</span>
+          <form onSubmit={handleSignIn}>
+            <label>Email address<input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" /></label>
+            <label>Password<span className="password-field"><input type={showPassword ? 'text' : 'password'} required minLength="6" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" /><button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></span></label>
             <div className="auth-options"><label><input type="checkbox" /> Remember me</label><a href="mailto:support@tourismmalawi.mw">Forgot password?</a></div>
-            <button className="button button--gold button--full" type="submit">Sign in <ArrowRight size={18} /></button>
+            {error && <div className="auth-error" role="alert">{error}</div>}
+            <button className="button button--gold button--full" type="submit" disabled={busy}>{busy ? 'Please waitâ€¦' : 'Sign in'} <ArrowRight size={18} /></button>
           </form>
           <div className="auth-divider"><span>or</span></div>
-          <button className="button button--quiet button--full" onClick={() => setSubmitted(true)}><Mail size={18} />Continue with a magic link</button>
+          <button className="button button--quiet button--full" disabled={busy} onClick={handleMagicLink}><Mail size={18} />{magicSent ? 'Magic link sent' : 'Continue with a magic link'}</button>
           <small className="auth-create">New here? <Link to="/about-us">Learn about membership</Link></small>
         </>}
       </div>

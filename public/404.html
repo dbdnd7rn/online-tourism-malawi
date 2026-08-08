@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Online Tourism Malawi</title>
+    <script>
+      var base = '/online-tourism-malawi/'
+      var route = window.location.pathname.replace(base, '')
+      window.location.replace(base + '?p=/' + encodeURIComponent(route) + window.location.hash)
+    </script>
+  </head>
+  <body></body>
+</html>
+

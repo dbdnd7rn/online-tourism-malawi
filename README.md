@@ -11,6 +11,8 @@ A responsive React frontend for discovering Malawi's arts, natural heritage, mus
 - Route aliases for the approved information architecture
 - Accurate Malawi outline treatment and real Malawi-focused photography
 - Keyboard-friendly controls, semantic landmarks and reduced-motion support
+- Supabase-ready authentication and editorial content services with resilient local fallback
+- Automated GitHub Pages deployment with SPA deep-link support
 
 ## Routes
 
@@ -40,6 +42,21 @@ Build and lint:
 pnpm lint
 pnpm build
 ```
+
+## Connect the production backend
+
+The app uses Supabase for email/password authentication, magic links and published content. It remains fully usable with its curated local content when environment keys are absent.
+
+1. Create a Supabase project.
+2. Run `supabase/migrations/20260808000000_initial_schema.sql` in the Supabase SQL editor.
+3. Copy `.env.example` to `.env.local` and add the project URL and public anonymous key.
+4. For GitHub Pages, add the same values as repository secrets named `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+
+The database enables row-level security and grants public read access only to records marked as published. Editorial writes remain restricted to authenticated dashboard users.
+
+## Deployment
+
+Every push to `main` runs `.github/workflows/deploy-pages.yml`, builds the production bundle and deploys it to GitHub Pages. The included `404.html` preserves direct links to React routes.
 
 ## Photography and map credits
 
