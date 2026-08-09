@@ -25,20 +25,117 @@ export const images = {
   fort: file('Fort Johnston in present day Mangochi, Malawi.jpg'),
 }
 
+export const creativeSegments = [
+  {
+    number: '01',
+    title: 'Cultural & Natural Heritage',
+    shortTitle: 'Heritage',
+    route: '/explore',
+    eyebrow: 'Place · Memory · Nature',
+    copy: 'Encounter the places, landscapes and ecosystems that carry Malawi’s long story.',
+    image: images.mulanje,
+    imageAlt: 'Mount Mulanje and the surrounding cultural landscape',
+    subcategories: [
+      { title: 'Archaeological & Historical Places', copy: 'Rock art, mission sites, monuments and places where Malawi’s past remains visible.' },
+      { title: 'Cultural Landscapes', copy: 'Living environments shaped through belief, work, settlement and shared memory.' },
+      { title: 'Natural Heritage', copy: 'The lake, mountains, plateaux, forests, wildlife and protected ecosystems.' },
+    ],
+  },
+  {
+    number: '02',
+    title: 'Performance & Celebration',
+    shortTitle: 'Performance',
+    route: '/performance',
+    eyebrow: 'Movement · Sound · Gathering',
+    copy: 'Feel the energy of performance, music and public celebration across Malawi.',
+    image: images.gulePortrait,
+    imageAlt: 'A Gule Wamkulu performer in ceremonial dress',
+    subcategories: [
+      { title: 'Performing Arts', copy: 'Dance, theatre, spoken word and performance traditions carried by communities and artists.' },
+      { title: 'Music', copy: 'Traditional rhythm, choral music, live bands and the country’s evolving contemporary sound.' },
+      { title: 'Festivals, Fairs & Feasts', copy: 'Gatherings where culture, food, performance, exchange and collective joy meet.' },
+    ],
+  },
+  {
+    number: '03',
+    title: 'Visual Arts & Crafts',
+    shortTitle: 'Visual Arts',
+    route: '/visual-arts-crafts',
+    eyebrow: 'Image · Material · Imagination',
+    copy: 'Meet the artists and makers translating Malawian experience into image and form.',
+    image: images.chichiri,
+    imageAlt: 'Cultural objects and visual heritage in Malawi',
+    subcategories: [
+      { title: 'Fine Arts', copy: 'Painting, drawing, sculpture, printmaking and contemporary artistic practice.' },
+      { title: 'Photography', copy: 'Documentary, editorial and fine-art photography framing Malawi through local eyes.' },
+      { title: 'Crafts', copy: 'Basketry, carving, textiles, pottery and material knowledge made by hand.' },
+    ],
+  },
+  {
+    number: '04',
+    title: 'Books & Press',
+    shortTitle: 'Books & Press',
+    route: '/books-press',
+    eyebrow: 'Read · Record · Exchange',
+    copy: 'Discover the writers, publishers and reading spaces shaping Malawi’s public imagination.',
+    image: images.mission,
+    imageAlt: 'Historic learning and cultural centre in Malawi',
+    subcategories: [
+      { title: 'Books', copy: 'Fiction, poetry, scholarship, children’s stories and independent publishing.' },
+      { title: 'Newspapers & Magazines', copy: 'Journalism, criticism and periodicals recording the conversations of the day.' },
+      { title: 'Library', copy: 'Public, community and specialist collections connecting readers with knowledge.' },
+      { title: 'Book Fairs', copy: 'Author talks, readings, publishing showcases and gatherings built around books.' },
+    ],
+  },
+  {
+    number: '05',
+    title: 'Audio Visual & Interactive Media',
+    shortTitle: 'Media',
+    route: '/media-library',
+    eyebrow: 'Watch · Listen · Play',
+    copy: 'Enter Malawi’s screen, broadcast, podcast and interactive storytelling landscape.',
+    image: images.ilala,
+    imageAlt: 'Historic media view of the Ilala on Lake Malawi',
+    subcategories: [
+      { title: 'Film & Video', copy: 'Documentary, cinema, music video and moving-image storytelling.' },
+      { title: 'TV & Radio', copy: 'Broadcast voices, public-interest programming and entertainment across the country.' },
+      { title: 'Podcasting', copy: 'On-demand conversations, reporting, oral history and cultural audio.' },
+      { title: 'Video Games', copy: 'Interactive worlds, playful learning and a growing community of digital creators.' },
+    ],
+  },
+  {
+    number: '06',
+    title: 'Design & Creative',
+    shortTitle: 'Design',
+    route: '/design-creative',
+    eyebrow: 'Shape · Space · Identity',
+    copy: 'Explore creative services that shape how Malawi looks, feels and inhabits space.',
+    image: images.likoma,
+    imageAlt: 'Architectural detail at St Peter’s Cathedral on Likoma Island',
+    subcategories: [
+      { title: 'Fashion Design', copy: 'Clothing, textiles, accessories and distinctive expressions of personal identity.' },
+      { title: 'Architectural Services', copy: 'Buildings and civic spaces designed for Malawi’s climate, communities and future.' },
+      { title: 'Graphic Design', copy: 'Brand identities, editorial systems, illustration and visual communication.' },
+      { title: 'Interior Design', copy: 'Thoughtful spaces shaped through material, colour, furniture and local craft.' },
+      { title: 'Landscape Design', copy: 'Outdoor environments connecting ecology, culture, movement and everyday life.' },
+    ],
+  },
+]
+
 export const heritageItems = [
-  { title: 'Chongoni Rock Art Area', location: 'Dedza', type: 'Heritage sites', image: images.chongoni, tag: 'UNESCO World Heritage' },
-  { title: 'Mount Mulanje', location: 'Southern Region', type: 'Landscapes', image: images.mulanje, tag: 'Mountain & hiking' },
-  { title: 'Lake Malawi', location: 'Central & Northern shores', type: 'Natural wonders', image: images.lake, tag: 'Lake of Stars' },
-  { title: 'Nyika Plateau', location: 'Rumphi', type: 'National parks', image: images.nyika, tag: 'Highland wilderness' },
-  { title: 'Zomba Plateau', location: 'Zomba', type: 'Landscapes', image: images.zomba, tag: 'Scenic heritage' },
-  { title: 'Mua Mission', location: 'Dedza', type: 'Heritage sites', image: images.mission, tag: 'Living culture' },
+  { title: 'Chongoni Rock Art Area', location: 'Dedza', type: 'Archaeological & Historical Places', image: images.chongoni, tag: 'UNESCO World Heritage' },
+  { title: 'Mount Mulanje', location: 'Southern Region', type: 'Natural Heritage', image: images.mulanje, tag: 'Mountain & hiking' },
+  { title: 'Lake Malawi', location: 'Central & Northern shores', type: 'Natural Heritage', image: images.lake, tag: 'Lake of Stars' },
+  { title: 'Nyika Plateau', location: 'Rumphi', type: 'Natural Heritage', image: images.nyika, tag: 'Highland wilderness' },
+  { title: 'Zomba Plateau', location: 'Zomba', type: 'Cultural Landscapes', image: images.zomba, tag: 'Scenic heritage' },
+  { title: 'Mua Mission', location: 'Dedza', type: 'Archaeological & Historical Places', image: images.mission, tag: 'Living culture' },
 ]
 
 export const museums = [
-  { title: 'Museum of Malawi â€” Chichiri', location: 'Blantyre', image: images.chichiri, detail: 'Archaeology, ethnography and the story of Malawi from prehistory to independence.', hours: 'Monâ€“Fri Â· 8:00â€“16:00' },
-  { title: 'Cultural & Museum Centre Karonga', location: 'Karonga', image: images.karonga, detail: 'Dinosaurs, early humans and the cultural history of Malawiâ€™s far north.', hours: 'Daily Â· 8:00â€“17:00' },
-  { title: 'Kungoni Centre of Culture & Art', location: 'Mua, Dedza', image: images.mission, detail: 'A remarkable Chamare Museum collection centred on Chewa, Ngoni and Yao traditions.', hours: 'Monâ€“Sat Â· 8:00â€“16:30' },
-  { title: 'Lake Malawi Museum', location: 'Mangochi', image: images.fort, detail: 'Maritime histories, early steamships and the communities of the southern lakeshore.', hours: 'Monâ€“Fri Â· 8:00â€“16:00' },
+  { title: 'Museum of Malawi — Chichiri', location: 'Blantyre', image: images.chichiri, detail: 'Archaeology, ethnography and the story of Malawi from prehistory to independence.', hours: 'Mon–Fri · 8:00–16:00' },
+  { title: 'Cultural & Museum Centre Karonga', location: 'Karonga', image: images.karonga, detail: 'Dinosaurs, early humans and the cultural history of Malawi’s far north.', hours: 'Daily · 8:00–17:00' },
+  { title: 'Kungoni Centre of Culture & Art', location: 'Mua, Dedza', image: images.mission, detail: 'A remarkable Chamare Museum collection centred on Chewa, Ngoni and Yao traditions.', hours: 'Mon–Sat · 8:00–16:30' },
+  { title: 'Lake Malawi Museum', location: 'Mangochi', image: images.fort, detail: 'Maritime histories, early steamships and the communities of the southern lakeshore.', hours: 'Mon–Fri · 8:00–16:00' },
 ]
 
 export const performances = [
@@ -69,4 +166,3 @@ export const photoCredits = [
   ['Gule Wamkulu images', 'Wikimedia Commons contributors', 'See source file'],
   ['Malawi landscape and archive images', 'Wikimedia Commons contributors', 'See source file'],
 ]
-

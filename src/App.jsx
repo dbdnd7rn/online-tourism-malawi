@@ -28,11 +28,11 @@ import {
 import { Link, NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import { useContent } from './context/ContentContext'
-import { images } from './data/content'
+import { creativeSegments, images } from './data/content'
 
 const navigation = [
   { label: 'Home', to: '/' },
-  { label: 'Explore', to: '/explore' },
+  { label: 'Sectors', to: '/segments' },
   { label: 'Museums', to: '/museums' },
   { label: 'Performance', to: '/performance' },
   { label: 'Events', to: '/events' },
@@ -239,8 +239,8 @@ function Footer() {
           </div>
         </div>
         <div className="footer-links">
-          <div><strong>Discover</strong><Link to="/explore">Arts & heritage</Link><Link to="/museums">Museums</Link><Link to="/performance">Living traditions</Link></div>
-          <div><strong>Visit online</strong><Link to="/events">Events</Link><Link to="/media-library">Podcasts</Link><Link to="/about-us">Our story</Link></div>
+          <div><strong>Discover</strong><Link to="/segments">Creative sectors</Link><Link to="/explore">Cultural & natural heritage</Link><Link to="/museums">Museums</Link></div>
+          <div><strong>Create & gather</strong><Link to="/performance">Performance</Link><Link to="/events">Events</Link><Link to="/media-library">Media & podcasts</Link></div>
           <div><strong>Keep in touch</strong><a href="mailto:hello@tourismmalawi.mw">hello@tourismmalawi.mw</a><span>Lilongwe, Malawi</span><span>Mon–Fri · 08:00–17:00</span></div>
         </div>
       </div>
@@ -349,17 +349,13 @@ function HomePage() {
 
       <section className="section section--ivory">
         <div className="shell">
-          <SectionHeading eyebrow="Choose your path" title={<>A country of <em>many worlds</em></>} copy="Move through Malawi by landscape, memory or the rhythm of a living tradition." />
-          <div className="path-grid">
-            {[
-              { no: '01', title: 'Arts & Natural Heritage', copy: 'Rock art, mountains, wildlife and the lake that holds a nation’s imagination.', image: images.mulanje, to: '/explore' },
-              { no: '02', title: 'Museums & Collections', copy: 'Meet the objects and institutions safeguarding Malawi’s many histories.', image: images.karonga, to: '/museums' },
-              { no: '03', title: 'Performance & Celebration', copy: 'Enter a world of masks, drums, ceremony, dance and collective joy.', image: images.gulePortrait, to: '/performance' },
-            ].map((item, index) => (
-              <Link className="path-card" to={item.to} key={item.title} data-reveal="card" data-tilt data-reveal-delay={`${index * 90}ms`} onPointerMove={handleTiltPointerMove} onPointerLeave={resetTiltPointer}>
-                <Picture src={item.image} alt={item.title} />
-                <span className="path-card__no">{item.no}</span>
-                <div className="path-card__content"><h3>{item.title}</h3><p>{item.copy}</p><span className="path-card__arrow"><ArrowUpRight size={19} /></span></div>
+          <SectionHeading eyebrow="Six creative sectors" title={<>A country of <em>many worlds</em></>} copy="Explore Malawi through heritage, performance, image, publishing, media and design." action={{ label: 'See all sectors', to: '/segments' }} />
+          <div className="path-grid path-grid--six">
+            {creativeSegments.map((item, index) => (
+              <Link className="path-card" to={item.route} key={item.title} data-reveal="card" data-tilt data-reveal-delay={`${index * 75}ms`} onPointerMove={handleTiltPointerMove} onPointerLeave={resetTiltPointer}>
+                <Picture src={item.image} alt={item.imageAlt} />
+                <span className="path-card__no">{item.number}</span>
+                <div className="path-card__content"><h3>{item.title}</h3><p>{item.copy}</p><small>{item.subcategories.map((subcategory) => subcategory.title).join(' · ')}</small><span className="path-card__arrow"><ArrowUpRight size={19} /></span></div>
               </Link>
             ))}
           </div>
@@ -410,13 +406,99 @@ function Newsletter() {
   )
 }
 
+function SegmentPillars({ segment, inverse = false }) {
+  return (
+    <section className={`section segment-pillars ${inverse ? 'section--dark segment-pillars--inverse' : 'section--paper'}`}>
+      <div className="shell">
+        <SectionHeading
+          inverse={inverse}
+          eyebrow={`${segment.number} · ${segment.shortTitle}`}
+          title={<>Inside the <em>segment</em></>}
+          copy="Use these official areas to move directly to the creative work, institutions and stories that interest you."
+        />
+        <div className={`segment-pillar-grid ${segment.subcategories.length > 4 ? 'segment-pillar-grid--five' : ''}`}>
+          {segment.subcategories.map((subcategory, index) => (
+            <article key={subcategory.title} data-reveal="card" data-reveal-delay={`${index * 70}ms`}>
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <h3>{subcategory.title}</h3>
+              <p>{subcategory.copy}</p>
+              <i aria-hidden="true"><ArrowUpRight size={18} /></i>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function SegmentsPage() {
+  return (
+    <>
+      <PageHero
+        eyebrow="Malawi’s creative economy"
+        title={<>Six sectors.<br /><em>One living story.</em></>}
+        copy="Discover the official cultural and creative segments that organise this gateway to Malawi."
+        image={images.market}
+        imageAlt="A colourful gathering around Malawian food, culture and creative life"
+        tall
+      >
+        <a href="#segment-directory" className="button button--gold">Explore all six <ArrowDownRight size={18} /></a>
+      </PageHero>
+      <section id="segment-directory" className="section section--ivory segment-directory">
+        <div className="shell">
+          <SectionHeading eyebrow="Find your way in" title={<>The cultural &<br /><em>creative landscape</em></>} copy="Each segment opens onto its own practices, organisations, people and public experiences." />
+          <div className="segment-directory__grid">
+            {creativeSegments.map((segment, index) => (
+              <article className="segment-directory-card" key={segment.title} data-reveal="card" data-tilt data-reveal-delay={`${index * 70}ms`} onPointerMove={handleTiltPointerMove} onPointerLeave={resetTiltPointer}>
+                <Picture src={segment.image} alt={segment.imageAlt} />
+                <div className="segment-directory-card__body">
+                  <span>{segment.number}</span>
+                  <small>{segment.eyebrow}</small>
+                  <h2>{segment.title}</h2>
+                  <p>{segment.copy}</p>
+                  <ul>{segment.subcategories.map((subcategory) => <li key={subcategory.title}><ArrowRight size={14} />{subcategory.title}</li>)}</ul>
+                  <Link className="text-link" to={segment.route}>Enter this segment <ArrowUpRight size={18} /></Link>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+      <section className="sector-bridge">
+        <div className="shell sector-bridge__inner" data-reveal="up">
+          <div><Eyebrow>Collections across sectors</Eyebrow><h2>Objects, archives<br />and <em>living ideas.</em></h2></div>
+          <div><p>Museums and collections connect every part of Malawi’s creative landscape—from archaeology and craft to publishing, broadcasting and contemporary design.</p><Link className="button button--outline" to="/museums">Explore museums <ArrowRight size={18} /></Link></div>
+        </div>
+      </section>
+    </>
+  )
+}
+
+function SegmentDetailPage({ segment }) {
+  return (
+    <>
+      <PageHero eyebrow={segment.eyebrow} title={<>{segment.title.split(' & ')[0]} &<br /><em>{segment.title.split(' & ').slice(1).join(' & ')}</em></>} copy={segment.copy} image={segment.image} imageAlt={segment.imageAlt} tall>
+        <a href="#segment-areas" className="button button--gold">Explore the areas <ArrowDownRight size={18} /></a>
+      </PageHero>
+      <div id="segment-areas"><SegmentPillars segment={segment} /></div>
+      <section className="sector-editorial">
+        <div className="shell sector-editorial__grid" data-reveal="up">
+          <Picture src={segment.title === 'Books & Press' ? images.fort : segment.title === 'Design & Creative' ? images.tea : images.guleArchive} alt={`A Malawi story connected to ${segment.title}`} />
+          <div><Eyebrow>Creative Malawi</Eyebrow><h2>Local practice.<br /><em>Global imagination.</em></h2><p>Meet established practitioners, emerging talent, community organisations and learning spaces. This first collection is a realistic editorial foundation ready to grow through verified Malawian partnerships.</p><div className="sector-editorial__links"><Link className="button button--outline" to="/events">Find related events <ArrowRight size={18} /></Link><Link className="text-link" to="/about-us">How we curate <ArrowUpRight size={18} /></Link></div></div>
+        </div>
+      </section>
+    </>
+  )
+}
+
 function ExplorePage() {
   const { heritageItems } = useContent()
   const location = useLocation()
   const initialQuery = new URLSearchParams(location.search).get('q') || ''
   const [filter, setFilter] = useState('All')
   const [query, setQuery] = useState(initialQuery)
-  const filters = ['All', 'Heritage sites', 'Landscapes', 'Natural wonders', 'National parks']
+  const segment = creativeSegments[0]
+  const filters = ['All', ...segment.subcategories.map((subcategory) => subcategory.title)]
   const filtered = useMemo(() => heritageItems.filter((item) => {
     const typeMatch = filter === 'All' || item.type === filter
     const queryMatch = `${item.title} ${item.location} ${item.type}`.toLowerCase().includes(query.toLowerCase())
@@ -424,7 +506,8 @@ function ExplorePage() {
   }), [filter, query, heritageItems])
   return (
     <>
-      <PageHero eyebrow="Explore Malawi" title={<>Arts & Natural<br /><em>Heritage</em></>} copy="Follow the stories written into Malawi’s rock, water, forests and highlands." image={images.mulanje} imageAlt="Mount Mulanje rising over the landscape" tall />
+      <PageHero eyebrow={segment.eyebrow} title={<>Cultural & Natural<br /><em>Heritage</em></>} copy={segment.copy} image={images.mulanje} imageAlt="Mount Mulanje rising over the landscape" tall />
+      <SegmentPillars segment={segment} />
       <section className="section section--ivory">
         <div className="shell">
           <div className="collection-toolbar" data-reveal="up">
@@ -494,11 +577,13 @@ function PerformancePage() {
   const { performances } = useContent()
   const [active, setActive] = useState(0)
   const current = performances[active]
+  const segment = creativeSegments[1]
   return (
     <>
-      <PageHero eyebrow="Living heritage" title={<>Performance &<br /><em>Celebration</em></>} copy="Feel Malawi through movement, rhythm, ceremony and the shared energy of a gathered community." image={images.gule} imageAlt="Gule Wamkulu dancers performing in Malawi" tall>
+      <PageHero eyebrow={segment.eyebrow} title={<>Performance &<br /><em>Celebration</em></>} copy={segment.copy} image={images.gule} imageAlt="Gule Wamkulu dancers performing in Malawi" tall>
         <Link className="button button--gold" to="/media-library">Listen to the stories <Headphones size={18} /></Link>
       </PageHero>
+      <SegmentPillars segment={segment} />
       <section className="section section--dark performance-browser">
         <div className="shell">
           <SectionHeading inverse eyebrow="Traditions in motion" title={<>Carried by<br /><em>the community</em></>} copy="Select a tradition to begin. Each one remains connected to its own people, place and purpose." />
@@ -582,11 +667,13 @@ function MediaPage() {
   const [isPlaying, setIsPlaying] = useState(false)
   const selected = podcasts[playing]
   const selectEpisode = (index) => { setPlaying(index); setIsPlaying(true) }
+  const segment = creativeSegments[4]
   return (
     <>
-      <PageHero eyebrow="Watch · Listen · Remember" title={<>Media Library<br />& <em>Podcasts</em></>} copy="Let Malawi come closer through documentary shorts, field recordings, conversations and voices from the archive." image={images.ilala} imageAlt="Historic view of the Ilala on Lake Malawi">
-        <div className="media-counts" data-reveal="up"><span><strong>42</strong> films</span><span><strong>68</strong> audio stories</span><span><strong>12</strong> collections</span></div>
+      <PageHero eyebrow="Media Library & Podcasts" title={<>Audio Visual &<br /><em>Interactive Media</em></>} copy={segment.copy} image={images.ilala} imageAlt="Historic view of the Ilala on Lake Malawi">
+        <div className="media-counts" data-reveal="up"><span><strong>42</strong> films</span><span><strong>68</strong> audio stories</span><span><strong>12</strong> broadcasts</span><span><strong>08</strong> interactive works</span></div>
       </PageHero>
+      <SegmentPillars segment={segment} />
       <section className="podcast-stage">
         <div className="shell">
           <SectionHeading inverse eyebrow="Original podcast" title={<>Voices of the<br /><em>Warm Heart</em></>} copy="Intimate conversations about place, practice and memory." />
@@ -682,16 +769,22 @@ function App() {
     <Layout>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/segments" element={<SegmentsPage />} />
         <Route path="/explore" element={<ExplorePage />} />
+        <Route path="/cultural-natural-heritage" element={<Navigate to="/explore" replace />} />
         <Route path="/arts-natural-heritage" element={<Navigate to="/explore" replace />} />
         <Route path="/museums" element={<MuseumsPage />} />
         <Route path="/museums-collections" element={<Navigate to="/museums" replace />} />
         <Route path="/performance" element={<PerformancePage />} />
         <Route path="/performance-celebration" element={<Navigate to="/performance" replace />} />
+        <Route path="/visual-arts-crafts" element={<SegmentDetailPage segment={creativeSegments[2]} />} />
+        <Route path="/books-press" element={<SegmentDetailPage segment={creativeSegments[3]} />} />
+        <Route path="/design-creative" element={<SegmentDetailPage segment={creativeSegments[5]} />} />
         <Route path="/events" element={<EventsPage />} />
         <Route path="/about-us" element={<AboutPage />} />
         <Route path="/about" element={<Navigate to="/about-us" replace />} />
         <Route path="/media-library" element={<MediaPage />} />
+        <Route path="/audio-visual-interactive-media" element={<Navigate to="/media-library" replace />} />
         <Route path="/media" element={<Navigate to="/media-library" replace />} />
         <Route path="/podcasts" element={<Navigate to="/media-library" replace />} />
         <Route path="/sign-in" element={<SignInPage />} />
