@@ -1,4 +1,5 @@
 import {
+  creativeDirectory as fallbackCreatives,
   events as fallbackEvents,
   heritageItems as fallbackHeritage,
   museums as fallbackMuseums,
@@ -8,6 +9,7 @@ import {
 import { supabase } from '../lib/supabase'
 
 export const fallbackContent = {
+  creatives: fallbackCreatives,
   events: fallbackEvents,
   heritageItems: fallbackHeritage,
   museums: fallbackMuseums,
@@ -16,6 +18,7 @@ export const fallbackContent = {
 }
 
 const tables = {
+  creatives: 'creative_profiles',
   events: 'events',
   heritageItems: 'heritage_items',
   museums: 'museums',
@@ -40,4 +43,3 @@ export async function loadPublishedContent() {
 
   return { content: Object.fromEntries(entries), source: 'supabase' }
 }
-
