@@ -131,6 +131,8 @@ p { line-height: 1.75; }
 .desktop-nav a:hover, .desktop-nav a.active { color: var(--gold-bright); }
 .desktop-nav a.active::after { transform: translateX(-50%) scale(1); }
 .header-actions { display: flex; align-items: center; gap: 10px; }
+.admin-shortcut { min-height: 38px; display: inline-flex; align-items: center; gap: 7px; padding: 0 12px; color: var(--gold-bright); border: 1px solid rgba(201, 154, 69, .34); font-family: var(--sans); font-size: 8px; font-weight: 700; letter-spacing: .1em; text-decoration: none; text-transform: uppercase; transition: color .2s ease, background .2s ease; }
+.admin-shortcut:hover { color: var(--ink); background: var(--gold); }
 .account-pill { min-height: 40px; display: inline-flex; align-items: center; gap: 8px; padding: 0 13px 0 7px; border: 1px solid rgba(201, 154, 69, .38); cursor: pointer; color: var(--ivory); background: transparent; font-size: 10px; }
 .account-pill span { width: 27px; height: 27px; display: grid; place-items: center; border-radius: 50%; color: var(--ink); background: var(--gold); font-weight: 700; }
 .icon-button { width: 42px; height: 42px; display: grid; place-items: center; padding: 0; cursor: pointer; border: 1px solid rgba(201, 154, 69, .35); border-radius: 50%; color: var(--ivory); background: rgba(255, 255, 255, .02); transition: .2s; }
@@ -760,6 +762,8 @@ p { line-height: 1.75; }
   .brand__words small { font-size: 7px; }
   .brand__words strong { font-size: 19px; }
   .header-actions .sign-in-link { display: none; }
+  .admin-shortcut { width: 38px; padding: 0; justify-content: center; }
+  .admin-shortcut span { display: none; }
   .home-hero { min-height: 790px; }
   .home-hero__veil { background: linear-gradient(0deg, rgba(5, 7, 7, .95) 0%, rgba(5, 7, 7, .58) 75%, rgba(5, 7, 7, .5)); }
   .home-hero__content { padding-top: 125px; padding-bottom: 140px; }

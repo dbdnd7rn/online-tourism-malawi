@@ -8,6 +8,7 @@ A responsive full-stack-ready React experience for discovering Malawi's six cult
 - Responsive layouts for desktop, tablet and mobile
 - Search and category filtering for heritage content and events
 - Interactive performance browser, podcast player, account registration and saved member collections
+- A protected Editorial Studio for content, events, podcasts, enquiries, submissions, subscribers, member roles and activity history
 - Route aliases for the approved information architecture
 - Accurate Malawi outline treatment and real Malawi-focused photography
 - Keyboard-friendly controls, semantic landmarks and reduced-motion support
@@ -40,6 +41,7 @@ A responsive full-stack-ready React experience for discovering Malawi's six cult
 | Member Collection | `/account` |
 | About Us | `/about-us` |
 | Sign In / Register | `/sign-in`, `/register` |
+| Administration Studio | `/admin` |
 | Accessibility / Privacy / Terms | `/accessibility`, `/privacy`, `/terms` |
 
 Legacy-friendly aliases such as `/arts-natural-heritage`, `/museums-collections`, `/performance-celebration`, `/media`, `/podcasts`, `/about` and `/login` redirect to their canonical pages.
@@ -63,11 +65,27 @@ pnpm build
 The app uses Supabase for email/password authentication, magic links and published content. It remains fully usable with its curated local content when environment keys are absent.
 
 1. Create a Supabase project.
-2. Run the SQL files in `supabase/migrations` in timestamp order. The second migration completes member profiles, saved collections, creative profiles, newsletter, contact and contribution storage.
+2. Run the SQL files in `supabase/migrations` in timestamp order. The second migration completes member profiles and community services, the third seeds the production catalogue, and the fourth adds secure administration roles, editorial policies and the audit trail.
 3. Copy `.env.example` to `.env.local` and add the project URL and public anonymous key.
 4. For GitHub Pages, add the same values as repository secrets named `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
 
 The database enables row-level security. Visitors can read published material and submit forms without gaining access to private records; signed-in members can only read and manage their own profiles, saved items and submissions.
+
+### Approve the first administrator
+
+Register the intended owner through the website first. Then run this once in the Supabase SQL editor, replacing the example address with that account's email:
+
+```sql
+update public.profiles
+set role = 'admin', updated_at = now()
+where id = (
+  select id from auth.users where email = 'owner@example.com'
+);
+```
+
+After signing in, the owner can open `/admin` and assign `editor` or `admin` roles from **Members & roles**. Role changes are enforced by database policies and recorded in `admin_audit_log`.
+
+Only the Supabase publishable key belongs in `VITE_SUPABASE_ANON_KEY`. Never place a Supabase secret or service-role key in a Vite environment variable or browser bundle.
 
 ## Deployment
 

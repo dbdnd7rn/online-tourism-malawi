@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import {
   ArrowDownRight,
   ArrowLeft,
@@ -36,6 +36,8 @@ import { useAuth } from './context/AuthContext'
 import { useContent } from './context/ContentContext'
 import { creativeSegments, images } from './data/content'
 import { createContribution, loadSavedItems, removeSavedItem, saveItem, sendContactMessage, subscribeToNewsletter } from './services/memberService'
+
+const AdminApp = lazy(() => import('./admin/AdminApp'))
 
 const navigation = [
   { label: 'Home', to: '/' },
@@ -174,7 +176,7 @@ function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, canManageContent } = useAuth()
   const closeOverlays = () => { setMenuOpen(false); setSearchOpen(false) }
 
   const submitSearch = (event) => {
@@ -200,6 +202,7 @@ function Header() {
             <button className="icon-button search-trigger" onClick={() => setSearchOpen((value) => !value)} aria-label="Search" aria-expanded={searchOpen}>
               {searchOpen ? <X size={19} /> : <Search size={19} />}
             </button>
+            {canManageContent && <Link className="admin-shortcut" to="/admin" onClick={closeOverlays}><Sparkles size={15} /><span>Studio</span></Link>}
             {user ? (
               <Link className="account-pill sign-in-link" to="/account" title="Open your account">
                 <span>{user.email?.slice(0, 1).toUpperCase()}</span>{user.email?.split('@')[0]}
@@ -1083,7 +1086,7 @@ function SignInPage() {
       <MotionLayer variant="auth" />
       <div className="auth-page__brand"><MalawiMark /><Link to="/"><ArrowLeft size={17} />Back to Malawi</Link></div>
       <div className="auth-card" data-reveal="hero">
-        {submitted || user ? <div className="auth-success"><span><Check size={27} /></span><Eyebrow>{authMode === 'register' ? 'Account created' : 'Welcome back'}</Eyebrow><h1>Your journey<br /><em>continues.</em></h1><p>{configured ? authMode === 'register' ? `Your account is ready. Check ${email} if email confirmation is enabled.` : `Signed in securely as ${user?.email || email}.` : 'Preview session active. Add the Supabase environment keys to enable secure production authentication.'}</p><Link to={nextRoute} className="button button--gold">Continue to your collection <ArrowRight size={18} /></Link></div> : <>
+        {submitted || user ? <div className="auth-success"><span><Check size={27} /></span><Eyebrow>{authMode === 'register' ? 'Account created' : 'Welcome back'}</Eyebrow><h1>Your journey<br /><em>continues.</em></h1><p>{configured ? authMode === 'register' ? `Your account is ready. Check ${email} if email confirmation is enabled.` : `Signed in securely as ${user?.email || email}.` : 'Preview session active. Add the Supabase environment keys to enable secure production authentication.'}</p><Link to={nextRoute} className="button button--gold">{nextRoute.startsWith('/admin') ? 'Continue to the studio' : 'Continue to your collection'} <ArrowRight size={18} /></Link></div> : <>
           <Eyebrow>Member access</Eyebrow><h1>{authMode === 'register' ? <>Join the<br /><em>journey.</em></> : <>Welcome<br /><em>back.</em></>}</h1><p>{authMode === 'register' ? 'Create an account to save discoveries and contribute to the collection.' : 'Sign in to save stories, build collections and continue listening.'}</p>
           <span className={`auth-mode ${configured ? 'auth-mode--live' : ''}`}>{configured ? 'Secure authentication connected' : 'Preview mode · backend keys pending'}</span>
           <form onSubmit={handleSignIn}>
@@ -1108,6 +1111,8 @@ function NotFoundPage() {
 }
 
 function App() {
+  const location = useLocation()
+  if (location.pathname.startsWith('/admin')) return <Suspense fallback={<div className="loading-state">Preparing the editorial studio…</div>}><AdminApp /></Suspense>
   return (
     <Layout>
       <Routes>
