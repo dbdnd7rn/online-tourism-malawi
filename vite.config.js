@@ -66,10 +66,13 @@ function repairLegacyStyles() {
       if (id !== resolvedVirtualStylesId) return null
 
       const source = readFileSync(new URL('./src/styles.css', import.meta.url), 'utf8')
-      return source.replace(
-        /\.map-feature h2 \{[\s\S]*?\.performance-focus h3 \{ margin: 8px 0 10px; font-size: 52px; \}/,
-        repairedCollectionStyles.trim(),
-      )
+      const lines = source.split(/\r?\n/)
+      const markerIndex = lines.findIndex((line) => line.includes('tokens truncated'))
+
+      if (markerIndex === -1) return source
+
+      lines.splice(markerIndex, 1, repairedCollectionStyles.trim())
+      return lines.join('\n')
     },
   }
 }
