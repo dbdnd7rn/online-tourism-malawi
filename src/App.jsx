@@ -34,7 +34,13 @@ import {
 import { Link, NavLink, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import { useContent } from './context/ContentContext'
-import { creativeSegments, images } from './data/content'
+import {
+  creativeSegments,
+  heritageItems as curatedHeritageItems,
+  images,
+  tentativeHeritage,
+  worldHeritageHighlights,
+} from './data/content'
 import { createContribution, loadSavedItems, removeSavedItem, saveItem, sendContactMessage, subscribeToNewsletter } from './services/memberService'
 
 const AdminApp = lazy(() => import('./admin/AdminApp'))
@@ -42,11 +48,17 @@ const AdminApp = lazy(() => import('./admin/AdminApp'))
 const navigation = [
   { label: 'Home', to: '/' },
   { label: 'Sectors', to: '/segments' },
-  { label: 'Museums', to: '/museums' },
+  { label: 'Heritage', to: '/explore' },
   { label: 'Performance', to: '/performance' },
   { label: 'Events', to: '/events' },
   { label: 'Media', to: '/media-library' },
   { label: 'About', to: '/about-us' },
+]
+
+const heritageMapStops = [
+  { id: 'north', name: 'Karonga & Nyika', region: 'Northern Region', query: 'Northern Region', copy: 'Fossil landscapes, high plateaux, living collections and the Nyika–Vwaza conservation system.' },
+  { id: 'centre', name: 'Dedza & the Lake', region: 'Central Region', query: 'Central Region', copy: 'Rock art, cultural centres and lakeshore stories connect place, memory and creative practice.' },
+  { id: 'south', name: 'Mulanje & Lower Shire', region: 'Southern Region', query: 'Southern Region', copy: 'World Heritage mountains, wetlands, shrines, historic corridors and protected river landscapes.' },
 ]
 
 const slugify = (value = '') => value
@@ -55,6 +67,28 @@ const slugify = (value = '') => value
   .replace(/[\u0300-\u036f]/g, '')
   .replace(/[^a-z0-9]+/g, '-')
   .replace(/(^-|-$)/g, '')
+
+const buildHeritageCatalogue = (publishedItems = []) => {
+  const catalogue = new Map(
+    curatedHeritageItems.map((item) => [item.slug || slugify(item.title), item]),
+  )
+
+  publishedItems.forEach((item) => {
+    const key = item.slug || slugify(item.title)
+    catalogue.set(key, { ...catalogue.get(key), ...item, slug: key })
+  })
+
+  return Array.from(catalogue.values()).map((item) => {
+    if ((item.slug || slugify(item.title)) !== 'mount-mulanje') return item
+    return {
+      ...item,
+      location: item.location === 'Southern Region' ? 'Mulanje' : item.location,
+      region: item.region || 'Southern Region',
+      type: 'Cultural Landscapes',
+      tag: 'UNESCO World Heritage · 2025',
+    }
+  })
+}
 
 const imageFallback = (event) => {
   event.currentTarget.style.opacity = '0'
@@ -108,9 +142,11 @@ function useRevealMotion(key) {
 
     const observe = () => {
       revealElements().forEach((element, index) => {
-        if (element.dataset.revealReady) return
-        element.dataset.revealReady = 'true'
-        element.style.setProperty('--reveal-delay', element.dataset.revealDelay || `${Math.min(index % 7, 6) * 70}ms`)
+        if (element.dataset.revealReady && element.classList.contains('is-visible')) return
+        if (!element.dataset.revealReady) {
+          element.dataset.revealReady = 'true'
+          element.style.setProperty('--reveal-delay', element.dataset.revealDelay || `${Math.min(index % 7, 6) * 70}ms`)
+        }
         observer.observe(element)
       })
     }
@@ -534,8 +570,8 @@ function SegmentsPage() {
       </section>
       <section className="sector-bridge">
         <div className="shell sector-bridge__inner" data-reveal="up">
-          <div><Eyebrow>Collections across sectors</Eyebrow><h2>Objects, archives<br />and <em>living ideas.</em></h2></div>
-          <div><p>Museums and collections connect every part of Malawi’s creative landscape—from archaeology and craft to publishing, broadcasting and contemporary design.</p><Link className="button button--outline" to="/museums">Explore museums <ArrowRight size={18} /></Link></div>
+          <div><Eyebrow>Inside the heritage sector</Eyebrow><h2>Places, objects<br />and <em>living memory.</em></h2></div>
+          <div><p>Museums and collections now sit inside Cultural & Natural Heritage, connecting archaeological places, cultural landscapes and protected ecosystems with the objects and archives that help interpret them.</p><Link className="button button--outline" to="/explore#heritage-museums">Enter the heritage sector <ArrowRight size={18} /></Link></div>
         </div>
       </section>
     </>
@@ -564,16 +600,17 @@ function SearchPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const urlQuery = new URLSearchParams(location.search).get('q') || ''
+  const heritageCatalogue = useMemo(() => buildHeritageCatalogue(heritageItems), [heritageItems])
 
   const index = useMemo(() => [
     ...creativeSegments.map((item) => ({ title: item.title, copy: item.copy, type: 'Creative sector', image: item.image, route: item.route, meta: item.eyebrow })),
-    ...heritageItems.map((item) => ({ title: item.title, copy: item.tag, type: item.type, image: item.image, route: `/heritage/${item.slug || slugify(item.title)}`, meta: item.location })),
+    ...heritageCatalogue.map((item) => ({ title: item.title, copy: item.summary || item.tag, type: item.type, image: item.image, route: `/heritage/${item.slug || slugify(item.title)}`, meta: item.location })),
     ...museums.map((item) => ({ title: item.title, copy: item.detail, type: 'Museum & collection', image: item.image, route: `/museums/${item.slug || slugify(item.title)}`, meta: item.location })),
     ...performances.map((item) => ({ title: item.title, copy: item.description, type: 'Performance', image: item.image, route: '/performance', meta: item.people })),
     ...events.map((item) => ({ title: item.title, copy: `${item.day} ${item.month} · ${item.place}`, type: item.type, image: item.image, route: `/events/${item.slug || slugify(item.title)}`, meta: 'Event' })),
     ...podcasts.map((item) => ({ title: item.title, copy: item.guest, type: 'Podcast', image: item.image, route: '/media-library', meta: item.length })),
     ...creatives.map((item) => ({ title: item.name, copy: item.description, type: item.segment, image: item.image, route: `/directory/${item.slug}`, meta: item.location })),
-  ], [creatives, events, heritageItems, museums, performances, podcasts])
+  ], [creatives, events, heritageCatalogue, museums, performances, podcasts])
   const normalized = urlQuery.trim().toLowerCase()
   const results = normalized ? index.filter((item) => `${item.title} ${item.copy} ${item.type} ${item.meta}`.toLowerCase().includes(normalized)) : index.slice(0, 8)
   const submit = (event) => {
@@ -636,36 +673,113 @@ function CreatorDetailPage() {
 }
 
 function ExplorePage() {
-  const { heritageItems } = useContent()
+  const { heritageItems, museums } = useContent()
   const location = useLocation()
   const initialQuery = new URLSearchParams(location.search).get('q') || ''
   const [filter, setFilter] = useState('All')
   const [query, setQuery] = useState(initialQuery)
+  const [activeMapStop, setActiveMapStop] = useState('centre')
   const segment = creativeSegments[0]
   const filters = ['All', ...segment.subcategories.map((subcategory) => subcategory.title)]
-  const filtered = useMemo(() => heritageItems.filter((item) => {
+  const heritageCatalogue = useMemo(() => buildHeritageCatalogue(heritageItems), [heritageItems])
+  const discoveries = useMemo(() => [
+    ...heritageCatalogue.map((item) => ({ ...item, kind: 'heritage' })),
+    ...museums.map((item) => ({
+      ...item,
+      kind: 'museum',
+      type: 'Museums & Collections',
+      tag: 'Museum & collection',
+      summary: item.detail,
+      region: item.location,
+    })),
+  ], [heritageCatalogue, museums])
+  const filtered = useMemo(() => discoveries.filter((item) => {
     const typeMatch = filter === 'All' || item.type === filter
-    const queryMatch = `${item.title} ${item.location} ${item.type}`.toLowerCase().includes(query.toLowerCase())
+    const queryMatch = `${item.title} ${item.location} ${item.region || ''} ${item.type} ${item.tag || ''} ${item.summary || ''}`.toLowerCase().includes(query.toLowerCase())
     return typeMatch && queryMatch
-  }), [filter, query, heritageItems])
+  }), [discoveries, filter, query])
+  const activeStop = heritageMapStops.find((stop) => stop.id === activeMapStop) || heritageMapStops[1]
   return (
     <>
-      <PageHero eyebrow={segment.eyebrow} title={<>Cultural & Natural<br /><em>Heritage</em></>} copy={segment.copy} image={images.mulanje} imageAlt="Mount Mulanje rising over the landscape" tall />
-      <SegmentPillars segment={segment} />
-      <section className="section section--ivory">
-        <div className="shell">
-          <div className="collection-toolbar" data-reveal="up">
-            <div className="filter-row" role="group" aria-label="Filter destinations">{filters.map((item) => <button className={filter === item ? 'active' : ''} onClick={() => setFilter(item)} key={item}>{item}</button>)}</div>
-            <label className="inline-search"><Search size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search the collection" aria-label="Search heritage collection" /></label>
+      <PageHero eyebrow={segment.eyebrow} title={<>Cultural & Natural<br /><em>Heritage</em></>} copy="Explore the places, landscapes, ecosystems, museums and collections that carry Malawi’s long story." image={images.mulanje} imageAlt="Mount Mulanje rising over the landscape" tall>
+        <div className="hero-detail-actions"><a href="#heritage-collection" className="button button--gold">Explore the collection <ArrowDownRight size={18} /></a><a href="#heritage-museums" className="text-link">Meet the museums <ArrowDownRight size={17} /></a></div>
+      </PageHero>
+
+      <section className="heritage-snapshot section section--ivory">
+        <div className="shell heritage-snapshot__grid" data-reveal="up">
+          <div><Eyebrow>Malawi’s heritage register</Eyebrow><h2>A living inheritance,<br /><em>held across the country.</em></h2><p>International recognition is one doorway into a much larger story shaped by custodians, communities, researchers, rangers and museum teams.</p></div>
+          <div className="heritage-snapshot__stats" aria-label="Malawi heritage statistics">
+            <div><strong>03</strong><span>World Heritage<br />properties</span></div>
+            <div><strong>07</strong><span>properties on the<br />Tentative List</span></div>
+            <div><strong>12</strong><span>parks, reserves &<br />nature sanctuaries</span></div>
           </div>
-          <div className="result-note" data-reveal="up"><span>{String(filtered.length).padStart(2, '0')}</span> places to wander</div>
-          {filtered.length ? <div className="heritage-grid">{filtered.map((item, index) => <HeritageCard key={item.title} item={item} index={index} />)}</div> : <EmptyState />}
         </div>
       </section>
+
+      <SegmentPillars segment={segment} />
+
+      <section className="world-heritage-section">
+        <div className="shell">
+          <SectionHeading inverse eyebrow="UNESCO World Heritage" title={<>Three places.<br /><em>Global significance.</em></>} copy="Malawi’s three inscribed properties connect rock art, freshwater biodiversity and a sacred mountain landscape." />
+          <div className="world-heritage-grid">
+            {worldHeritageHighlights.map((item, index) => <Link className="world-heritage-card" to={item.route} key={item.title} data-reveal="card" data-reveal-delay={`${index * 80}ms`}>
+              <Picture src={item.image} alt={item.title} />
+              <div className="world-heritage-card__shade" />
+              <div className="world-heritage-card__top"><span>{item.category}</span><strong>{item.year}</strong></div>
+              <div className="world-heritage-card__body"><small><MapPin size={14} />{item.location}</small><h3>{item.title}</h3><p>{item.copy}</p><i aria-hidden="true"><ArrowUpRight size={19} /></i></div>
+            </Link>)}
+          </div>
+        </div>
+      </section>
+
+      <section className="heritage-register section section--paper">
+        <div className="shell heritage-register__grid">
+          <div data-reveal="up"><Eyebrow>UNESCO Tentative List · 2025</Eyebrow><h2>A heritage map<br /><em>still unfolding.</em></h2><p>These seven properties are being considered for future nomination. They are presented as Tentative List places—not yet as inscribed World Heritage properties.</p></div>
+          <ol>{tentativeHeritage.map((item, index) => <li key={item} data-reveal="up" data-reveal-delay={`${index * 45}ms`}><span>{String(index + 1).padStart(2, '0')}</span><p>{item}</p></li>)}</ol>
+        </div>
+      </section>
+
+      <section id="heritage-collection" className="section section--ivory heritage-collection">
+        <div className="shell">
+          <SectionHeading eyebrow="Places & collections" title={<>Find the story<br /><em>that calls you.</em></>} copy="Museums now live inside this sector alongside archaeological places, cultural landscapes and natural heritage." />
+          <div className="collection-toolbar" data-reveal="up">
+            <div className="filter-row" role="group" aria-label="Filter destinations">{filters.map((item) => <button className={filter === item ? 'active' : ''} onClick={() => setFilter(item)} key={item}>{item}</button>)}</div>
+            <label className="inline-search"><Search size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search places and museums" aria-label="Search heritage and museum collection" /></label>
+          </div>
+          <div className="result-note" data-reveal="up"><span>{String(filtered.length).padStart(2, '0')}</span> places and collections to discover</div>
+          {filtered.length ? <div className="heritage-grid">{filtered.map((item, index) => <HeritageCard key={`${item.kind}-${item.title}`} item={item} index={index} />)}</div> : <EmptyState />}
+        </div>
+      </section>
+
       <section className="map-feature">
         <div className="shell map-feature__inner" data-reveal="up">
-          <div><Eyebrow>North to south</Eyebrow><h2>One long,<br /><em>beautiful journey</em></h2><p>Malawi stretches along the Great Rift Valley. Discover high plateaux in the north, the vast lake through the centre, and dramatic massifs in the south.</p><Link className="text-link" to="/events">Plan around an event <ArrowUpRight size={18} /></Link></div>
-          <div className="malawi-map-display"><img src={images.map} alt="Accurate outline map of Malawi" onError={imageFallback} /><span className="map-pin map-pin--north">Nyika<small>Northern Region</small></span><span className="map-pin map-pin--centre">Lake Malawi<small>Central Region</small></span><span className="map-pin map-pin--south">Mulanje<small>Southern Region</small></span></div>
+          <div><Eyebrow>North to south</Eyebrow><h2>One long,<br /><em>beautiful journey</em></h2><p>Malawi stretches along the Great Rift Valley. Choose a region on the map to reveal a starting point for your heritage journey.</p><div className="map-feature__story" aria-live="polite"><span>{activeStop.region}</span><h3>{activeStop.name}</h3><p>{activeStop.copy}</p><a className="text-link" href="#heritage-collection" onClick={() => { setFilter('All'); setQuery(activeStop.query) }}>Explore this region <ArrowUpRight size={18} /></a></div></div>
+          <div className="malawi-map-display"><img src={images.map} alt="Accurate outline map of Malawi" onError={imageFallback} />{heritageMapStops.map((stop) => <button type="button" key={stop.id} className={`map-pin map-pin--${stop.id} ${activeMapStop === stop.id ? 'active' : ''}`} onClick={() => setActiveMapStop(stop.id)} aria-pressed={activeMapStop === stop.id}>{stop.name}<small>{stop.region}</small></button>)}</div>
+        </div>
+      </section>
+
+      <section id="heritage-museums" className="section section--paper heritage-museums">
+        <div className="shell">
+          <SectionHeading eyebrow="Museums inside heritage" title={<>Where memory<br /><em>is cared for.</em></>} copy="Museums, archives and cultural centres preserve evidence, host conversations and help visitors encounter places with deeper context." action={{ label: 'View the museum collection', to: '/museums' }} />
+          <div className="museum-list">{museums.slice(0, 4).map((museum, index) => (
+            <article className="museum-row" key={museum.title} data-reveal="up" data-reveal-delay={`${index * 70}ms`}>
+              <span className="museum-row__index">0{index + 1}</span>
+              <Picture src={museum.image} alt={museum.title} />
+              <div className="museum-row__copy"><small><MapPin size={14} />{museum.location}</small><h3>{museum.title}</h3><p>{museum.detail}</p><span><Clock3 size={15} />{museum.hours || 'Confirm before visiting'}</span></div>
+              <Link className="round-arrow" to={`/museums/${museum.slug || slugify(museum.title)}`} aria-label={`View ${museum.title}`}><ArrowUpRight /></Link>
+            </article>
+          ))}</div>
+        </div>
+      </section>
+
+      <section className="heritage-care">
+        <div className="shell">
+          <SectionHeading inverse eyebrow="Travel with care" title={<>Heritage is not<br /><em>just scenery.</em></>} copy="Some places are sacred, fragile or actively used by communities. A meaningful visit begins with permission, context and respect." />
+          <div className="heritage-care__grid">
+            <article data-reveal="card"><UsersRound size={25} aria-hidden="true" /><span>01</span><h3>Follow custodians</h3><p>Use local guides where required and let community knowledge shape how a place is understood.</p></article>
+            <article data-reveal="card" data-reveal-delay="70ms"><Camera size={25} aria-hidden="true" /><span>02</span><h3>Ask before recording</h3><p>Photography, drones and recording may be restricted around rock art, ceremonies, shrines and collections.</p></article>
+            <article data-reveal="card" data-reveal-delay="140ms"><Globe2 size={25} aria-hidden="true" /><span>03</span><h3>Leave places whole</h3><p>Stay on recognised routes, never remove material and support conservation through responsible local spending.</p></article>
+          </div>
         </div>
       </section>
     </>
@@ -673,7 +787,7 @@ function ExplorePage() {
 }
 
 function HeritageCard({ item, index }) {
-  const route = `/heritage/${item.slug || slugify(item.title)}`
+  const route = item.kind === 'museum' ? `/museums/${item.slug || slugify(item.title)}` : `/heritage/${item.slug || slugify(item.title)}`
   return (
     <article className={`heritage-card ${index === 0 ? 'heritage-card--large' : ''}`} data-reveal="card" data-tilt data-reveal-delay={`${index * 70}ms`} onPointerMove={handleTiltPointerMove} onPointerLeave={resetTiltPointer}>
       <Picture src={item.image} alt={item.title} />
@@ -691,8 +805,9 @@ function EmptyState() {
 function ContentDetailPage({ kind }) {
   const content = useContent()
   const { slug } = useParams()
+  const heritageCatalogue = useMemo(() => buildHeritageCatalogue(content.heritageItems), [content.heritageItems])
   const collections = {
-    heritage: content.heritageItems,
+    heritage: heritageCatalogue,
     museum: content.museums,
     event: content.events,
   }
@@ -709,7 +824,7 @@ function ContentDetailPage({ kind }) {
       itemType: 'heritage',
       intro: item.summary || `${item.title} is part of Malawi’s layered cultural and natural inheritance—a place to encounter slowly, respectfully and with local guidance.`,
       heading: 'A place held in memory',
-      facts: [['Category', item.type], ['Location', item.location], ['Recognition', item.tag], ['Best for', 'Context-rich discovery']],
+      facts: [['Category', item.type], ['Location', item.location], ['Region', item.region || item.location], ['Recognition', item.tag]],
     },
     museum: {
       eyebrow: 'Museum & Collection',
@@ -761,8 +876,8 @@ function MuseumsPage() {
   const { museums } = useContent()
   return (
     <>
-      <PageHero eyebrow="Places of memory" title={<>Museums &<br /><em>Collections</em></>} copy="Meet the keepers, objects and archives that carry Malawi’s histories forward." image={images.karonga} imageAlt="A museum collection in Malawi">
-        <a href="#museum-list" className="button button--gold">Browse museums <ArrowDownRight size={18} /></a>
+      <PageHero eyebrow="Cultural & Natural Heritage · Collections" title={<>Museums &<br /><em>Collections</em></>} copy="Meet the keepers, objects and archives that carry Malawi’s histories forward inside the heritage sector." image={images.karonga} imageAlt="A museum collection in Malawi">
+        <div className="hero-detail-actions"><a href="#museum-list" className="button button--gold">Browse museums <ArrowDownRight size={18} /></a><Link className="text-link" to="/explore">Back to heritage <ArrowLeft size={17} /></Link></div>
       </PageHero>
       <section className="museum-intro section section--ivory">
         <div className="shell museum-intro__grid" data-reveal="up"><div><Eyebrow>More than objects</Eyebrow><h2>Every collection is<br /><em>a conversation.</em></h2></div><p>From fossil discoveries in Karonga to the expressive masks of Mua, Malawi’s collections connect scientific discovery with lived cultural knowledge. Explore slowly—and listen to the voices around each object.</p></div>

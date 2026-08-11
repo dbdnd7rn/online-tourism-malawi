@@ -326,6 +326,39 @@ p { line-height: 1.75; }
 .inline-search input { width: 100%; border: 0; outline: 0; background: transparent; font-size: 12px; }
 .result-note { display: flex; align-items: baseline; gap: 10px; margin: 32px 0 20px; color: #6e6a62; font-family: var(--sans); font-size: 10px; letter-spacing: .13em; text-transform: uppercase; }
 .result-note span { color: var(--gold-dark); font-family: var(--serif); font-size: 26px; }
+.heritage-snapshot { padding-top: 105px; padding-bottom: 105px; }
+.heritage-snapshot__grid { display: grid; grid-template-columns: .9fr 1.1fr; align-items: end; gap: 95px; }
+.heritage-snapshot h2 { margin: 0 0 24px; font-size: clamp(48px, 5.8vw, 76px); line-height: .96; }
+.heritage-snapshot p { max-width: 520px; margin: 0; color: #5f5d56; }
+.heritage-snapshot__stats { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--dark-line); border-left: 1px solid var(--dark-line); }
+.heritage-snapshot__stats > div { min-height: 190px; display: flex; flex-direction: column; justify-content: space-between; padding: 27px 23px; border-right: 1px solid var(--dark-line); border-bottom: 1px solid var(--dark-line); }
+.heritage-snapshot__stats strong { color: var(--gold-dark); font-family: var(--serif); font-size: 56px; font-weight: 400; line-height: 1; }
+.heritage-snapshot__stats span { font-family: var(--sans); font-size: 9px; line-height: 1.6; letter-spacing: .11em; text-transform: uppercase; }
+
+.world-heritage-section { padding: 115px 0; overflow: hidden; color: var(--ivory); background: #101513; }
+.world-heritage-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 17px; }
+.world-heritage-card { position: relative; min-height: 590px; display: flex; align-items: end; overflow: hidden; color: var(--ivory); background: var(--ink); }
+.world-heritage-card > .picture, .world-heritage-card__shade { position: absolute; inset: 0; }
+.world-heritage-card__shade { background: linear-gradient(0deg, rgba(3, 5, 5, .96), rgba(3, 5, 5, .05) 75%); }
+.world-heritage-card:hover .picture img { transform: scale(1.045); }
+.world-heritage-card__top { position: absolute; z-index: 2; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-family: var(--sans); font-size: 8px; letter-spacing: .13em; text-transform: uppercase; }
+.world-heritage-card__top span { padding: 8px 10px; color: var(--ink); background: var(--gold); }
+.world-heritage-card__top strong { font-size: 10px; font-weight: 500; }
+.world-heritage-card__body { position: relative; z-index: 2; width: 100%; padding: 31px; }
+.world-heritage-card__body small { display: flex; align-items: center; gap: 7px; color: #ccc6bb; }
+.world-heritage-card__body h3 { margin: 12px 0 14px; font-size: 35px; line-height: 1; }
+.world-heritage-card__body p { max-width: 360px; margin: 0; color: #aaa69e; font-size: 11px; }
+.world-heritage-card__body i { position: absolute; right: 28px; bottom: 28px; width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid var(--gold); border-radius: 50%; }
+
+.heritage-register__grid { display: grid; grid-template-columns: .85fr 1.15fr; gap: 110px; }
+.heritage-register h2 { margin: 0 0 25px; font-size: clamp(48px, 5.8vw, 76px); line-height: .96; }
+.heritage-register p { max-width: 490px; color: #64615a; }
+.heritage-register ol { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--dark-line); }
+.heritage-register li { min-height: 78px; display: grid; grid-template-columns: 45px 1fr; align-items: center; gap: 18px; border-bottom: 1px solid var(--dark-line); }
+.heritage-register li span { color: var(--gold-dark); font-family: var(--sans); font-size: 9px; letter-spacing: .12em; }
+.heritage-register li p { margin: 0; color: var(--ink); font-family: var(--serif); font-size: 21px; line-height: 1.15; }
+.heritage-collection { overflow: hidden; }
+
 .heritage-grid { display: grid; grid-template-columns: repeat(2, 1fr); grid-auto-rows: 360px; gap: 18px; }
 .heritage-card { position: relative; display: flex; align-items: end; overflow: hidden; color: var(--ivory); background: var(--ink-soft); }
 .heritage-card--large { grid-row: span 2; }
@@ -347,14 +380,20 @@ p { line-height: 1.75; }
 .map-feature__inner { display: grid; grid-template-columns: .9fr 1.1fr; align-items: center; gap: 100px; }
 .map-feature h2 { margin-bottom: 25px; font-size: clamp(50px, 6vw, 80px); line-height: .95; }
 .map-feature p { max-width: 470px; color: #aaa79f; }
+.map-feature__story { max-width: 490px; margin-top: 38px; padding: 26px 0 0 27px; border-top: 1px solid var(--line); border-left: 2px solid var(--gold); }
+.map-feature__story > span { color: var(--gold); font-family: var(--sans); font-size: 8px; letter-spacing: .14em; text-transform: uppercase; }
+.map-feature__story h3 { margin: 9px 0; font-size: 31px; }
+.map-feature__story p { margin: 0 0 19px; font-size: 11px; }
 .malawi-map-display { position: relative; height: 620px; display: grid; place-items: center; }
 .malawi-map-display::before, .malawi-map-display::after { content: ''; position: absolute; border: 1px solid rgba(201, 154, 69, .13); border-radius: 50%; animation: ringBreath 10s var(--ease-in-out) infinite; }
 .malawi-map-display::before { width: 540px; height: 540px; }
 .malawi-map-display::after { width: 390px; height: 390px; animation-delay: -4s; }
 .malawi-map-display > img { position: relative; z-index: 1; width: 220px; height: 540px; object-fit: contain; filter: sepia(1) saturate(1.2) brightness(1.5); mix-blend-mode: screen; animation: mapDrift 10s var(--ease-in-out) infinite; }
-.map-pin { position: absolute; z-index: 3; min-width: 115px; padding-left: 17px; color: var(--gold-bright); font-family: var(--serif); font-size: 17px; }
+.map-pin { position: absolute; z-index: 3; min-width: 145px; padding: 0 0 0 17px; border: 0; cursor: pointer; text-align: left; color: var(--gold-bright); background: transparent; font-family: var(--serif); font-size: 17px; transition: color .2s ease, transform .2s ease; }
 .map-pin::before { content: ''; position: absolute; top: 7px; left: 0; width: 7px; height: 7px; border: 2px solid var(--gold); border-radius: 50%; animation: pinPulse 2.8s var(--ease-in-out) infinite; }
 .map-pin small { display: block; margin-top: 4px; font-family: var(--sans); font-size: 8px; letter-spacing: .12em; text-transform: uppercase; color: #85837c; }
+.map-pin:hover, .map-pin.active { color: var(--ivory); transform: translateY(-3px); }
+.map-pin.active::before { background: var(--gold); box-shadow: 0 0 0 7px rgba(201, 154, 69, .12); }
 .map-pin--north { top: 90px; right: 40px; }
 .map-pin--centre { top: 310px; left: 10px; }
 .map-pin--south { bottom: 65px; right: 50px; }
@@ -372,6 +411,15 @@ p { line-height: 1.75; }
 .museum-row__copy h3 { margin: 9px 0 10px; font-size: 29px; }
 .museum-row__copy p { max-width: 600px; margin: 0 0 13px; color: #64625c; font-size: 12px; }
 .museum-row__copy > span { display: flex; align-items: center; gap: 8px; font-size: 10px; color: #77736b; }
+.heritage-museums { overflow: hidden; }
+
+.heritage-care { padding: 115px 0; color: var(--ivory); background: var(--ink); }
+.heritage-care__grid { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.heritage-care__grid article { position: relative; min-height: 310px; padding: 34px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.heritage-care__grid article > svg { color: var(--gold); }
+.heritage-care__grid article > span { position: absolute; top: 35px; right: 32px; color: #6d6c67; font-family: var(--sans); font-size: 9px; letter-spacing: .13em; }
+.heritage-care__grid h3 { margin: 58px 0 17px; font-size: 31px; }
+.heritage-care__grid p { max-width: 320px; margin: 0; color: #aaa69e; font-size: 12px; }
 .object-feature { padding: 105px 0; color: var(--ivory); background: var(--ink); }
 .object-feature__inner { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 100px; }
 .object-feature__inner > .picture { height: 650px; }
@@ -675,6 +723,8 @@ p { line-height: 1.75; }
   .path-card__arrow { display: none; }
   .path-card__content { padding: 27px; }
   .map-feature__inner { gap: 50px; }
+  .world-heritage-card__body p { padding-right: 40px; }
+  .world-heritage-card__body h3 { font-size: 31px; }
 }
 
 @media (max-width: 980px) {
@@ -717,6 +767,10 @@ p { line-height: 1.75; }
   .footer-links { grid-template-columns: repeat(3, 1fr); }
   .page-hero, .page-hero--tall { min-height: 700px; }
   .page-hero h1 { font-size: clamp(60px, 11vw, 90px); }
+  .heritage-snapshot__grid, .heritage-register__grid { grid-template-columns: 1fr; gap: 55px; }
+  .world-heritage-grid { grid-template-columns: repeat(2, 1fr); }
+  .world-heritage-card:last-child { grid-column: span 2; min-height: 520px; }
+  .world-heritage-card:last-child .world-heritage-card__body { max-width: 560px; }
   .map-feature__inner { grid-template-columns: 1fr; }
   .malawi-map-display { height: 550px; }
   .museum-row { grid-template-columns: 35px 180px 1fr; gap: 20px; }
@@ -738,6 +792,8 @@ p { line-height: 1.75; }
   .archive-banner__inner > div:last-child { grid-column: 2; }
   .detail-story__grid { grid-template-columns: 160px 1fr; gap: 55px; }
   .detail-facts { grid-template-columns: repeat(2, 1fr); }
+  .heritage-care__grid article { padding: 28px; }
+  .heritage-care__grid h3 { font-size: 27px; }
   .search-results__grid { grid-template-columns: 1fr; }
   .directory-grid { grid-template-columns: repeat(2, 1fr); }
   .creator-profile__grid { grid-template-columns: 160px 1fr; gap: 55px; }
@@ -808,6 +864,16 @@ p { line-height: 1.75; }
   .page-hero__content { padding-top: 145px; padding-bottom: 70px; }
   .page-hero h1 { font-size: clamp(54px, 16vw, 72px); }
   .page-hero__index { display: none; }
+  .heritage-snapshot { padding-top: 80px; padding-bottom: 80px; }
+  .heritage-snapshot__stats { grid-template-columns: 1fr; }
+  .heritage-snapshot__stats > div { min-height: 120px; flex-direction: row; align-items: end; }
+  .heritage-snapshot__stats strong { font-size: 50px; }
+  .world-heritage-section, .heritage-care { padding: 85px 0; }
+  .world-heritage-grid { grid-template-columns: 1fr; }
+  .world-heritage-card, .world-heritage-card:last-child { min-height: 520px; grid-column: auto; }
+  .world-heritage-card__body p { padding-right: 0; }
+  .heritage-register li { min-height: 88px; grid-template-columns: 36px 1fr; gap: 12px; }
+  .heritage-register li p { font-size: 19px; }
   .collection-toolbar { align-items: stretch; flex-direction: column; }
   .filter-row { flex-wrap: nowrap; padding-bottom: 7px; overflow-x: auto; }
   .filter-row button { flex: none; }
@@ -821,6 +887,8 @@ p { line-height: 1.75; }
   .map-pin--north { right: 0; }
   .map-pin--centre { left: 0; }
   .map-pin--south { right: 0; }
+  .heritage-care__grid { grid-template-columns: 1fr; }
+  .heritage-care__grid article { min-height: 250px; }
   .museum-row { grid-template-columns: 28px 1fr; }
   .museum-row > .picture { grid-column: 2; height: 230px; }
   .museum-row__copy { grid-column: 2; }
