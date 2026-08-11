@@ -202,11 +202,8 @@ function MediaViewer({ item, onClose }) {
 
 function PodcastStage({ podcasts }) {
   const [selectedIndex, setSelectedIndex] = useState(0)
-  const selected = podcasts[selectedIndex]
-
-  useEffect(() => {
-    if (selectedIndex > podcasts.length - 1) setSelectedIndex(0)
-  }, [podcasts.length, selectedIndex])
+  const safeIndex = podcasts.length ? Math.min(selectedIndex, podcasts.length - 1) : 0
+  const selected = podcasts[safeIndex]
 
   if (!selected) return null
 
@@ -239,7 +236,7 @@ function PodcastStage({ podcasts }) {
 
         <div className="media-episode-list" aria-label="Podcast episodes">
           {podcasts.map((episode, index) => (
-            <button key={episode.id || episode.title} type="button" className={selectedIndex === index ? 'active' : ''} onClick={() => setSelectedIndex(index)}>
+            <button key={episode.id || episode.title} type="button" className={safeIndex === index ? 'active' : ''} onClick={() => setSelectedIndex(index)}>
               <span>{episode.number}</span>
               <Picture src={episode.image} alt="" />
               <div><strong>{episode.title}</strong><small>{episode.guest}</small></div>
