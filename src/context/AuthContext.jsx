@@ -5,6 +5,18 @@ import { hasSupabaseConfig, supabase } from '../lib/supabase'
 const AuthContext = createContext(null)
 const previewUserKey = 'otm:preview-user'
 
+const hasRecoveryParameters = () => {
+  if (typeof window === 'undefined') return false
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''))
+  const query = new URLSearchParams(window.location.search)
+  return hash.get('type') === 'recovery' || query.get('type') === 'recovery'
+}
+
+const authRedirect = (path) => new URL(
+  path.replace(/^\//, ''),
+  `${window.location.origin}${import.meta.env.BASE_URL}`,
+).toString()
+
 const readPreviewUser = () => {
   if (hasSupabaseConfig || typeof window === 'undefined') return null
   try { return JSON.parse(window.localStorage.getItem(previewUserKey)) }
@@ -29,6 +41,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(hasSupabaseConfig)
   const [profileLoading, setProfileLoading] = useState(false)
   const [profileError, setProfileError] = useState('')
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(hasRecoveryParameters)
 
   const loadProfile = useCallback(async (currentUser) => {
     if (!currentUser) {
@@ -74,10 +87,12 @@ export function AuthProvider({ children }) {
       setLoading(false)
       loadProfile(sessionUser)
     })
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
       const sessionUser = session?.user ?? null
       setUser(sessionUser)
       setLoading(false)
+      if (event === 'PASSWORD_RECOVERY') setIsPasswordRecovery(true)
+      if (event === 'SIGNED_OUT') setIsPasswordRecovery(false)
       loadProfile(sessionUser)
     })
     return () => { active = false; data.subscription.unsubscribe() }
@@ -94,6 +109,7 @@ export function AuthProvider({ children }) {
     configured: hasSupabaseConfig,
     isAdmin: profile?.role === 'admin',
     canManageContent: ['admin', 'editor'].includes(profile?.role),
+    isPasswordRecovery,
     refreshProfile,
     async signIn(email, password) {
       if (!supabase) {
@@ -143,13 +159,32 @@ export function AuthProvider({ children }) {
       if (error) throw error
       return data
     },
+    async requestPasswordReset(email) {
+      if (!supabase) return { preview: true }
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: authRedirect('/reset-password'),
+      })
+      if (error) throw error
+      return data
+    },
+    async updatePassword(password) {
+      if (!supabase) {
+        setIsPasswordRecovery(false)
+        return { preview: true }
+      }
+      const { data, error } = await supabase.auth.updateUser({ password })
+      if (error) throw error
+      setIsPasswordRecovery(false)
+      return data
+    },
     async signOut() {
       if (supabase) await supabase.auth.signOut()
       else persistPreviewUser(null)
       setUser(null)
       setProfile(null)
+      setIsPasswordRecovery(false)
     },
-  }), [user, profile, loading, profileLoading, profileError, loadProfile, refreshProfile])
+  }), [user, profile, loading, profileLoading, profileError, isPasswordRecovery, loadProfile, refreshProfile])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

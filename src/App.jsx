@@ -1093,12 +1093,106 @@ function SignInPage() {
             {authMode === 'register' && <label>Display name<input type="text" required value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder="How should we welcome you?" /></label>}
             <label>Email address<input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" /></label>
             <label>Password<span className="password-field"><input type={showPassword ? 'text' : 'password'} required minLength="6" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" /><button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></span></label>
-            <div className="auth-options"><label><input type="checkbox" /> Remember me</label><a href="mailto:support@tourismmalawi.mw">Forgot password?</a></div>
+            <div className="auth-options"><label><input type="checkbox" /> Remember me</label><Link to="/forgot-password">Forgot password?</Link></div>
             {error && <div className="auth-error" role="alert">{error}</div>}
             <button className="button button--gold button--full" type="submit" disabled={busy}>{busy ? 'Please wait…' : authMode === 'register' ? 'Create account' : 'Sign in'} <ArrowRight size={18} /></button>
           </form>
           {authMode === 'signin' && <><div className="auth-divider"><span>or</span></div><button className="button button--quiet button--full" disabled={busy} onClick={handleMagicLink}><Mail size={18} />{magicSent ? 'Magic link sent' : 'Continue with a magic link'}</button></>}
           <small className="auth-create">{authMode === 'register' ? 'Already a member?' : 'New here?'} <button type="button" onClick={() => { setAuthMode((mode) => mode === 'register' ? 'signin' : 'register'); setError('') }}>{authMode === 'register' ? 'Sign in' : 'Create an account'}</button></small>
+        </>}
+      </div>
+      <span className="auth-page__caption">Lake Malawi · The Lake of Stars</span>
+    </section>
+  )
+}
+
+function ForgotPasswordPage() {
+  const [email, setEmail] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [sent, setSent] = useState(false)
+  const [error, setError] = useState('')
+  const { configured, requestPasswordReset } = useAuth()
+
+  const handleResetRequest = async (event) => {
+    event.preventDefault()
+    setBusy(true)
+    setError('')
+    try {
+      await requestPasswordReset(email)
+      setSent(true)
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Unable to send the recovery email')
+    } finally { setBusy(false) }
+  }
+
+  return (
+    <section className="auth-page">
+      <Picture src={images.lakeSunset} alt="Lake Malawi at sunset" className="auth-page__image" />
+      <div className="auth-page__veil" />
+      <MotionLayer variant="auth" />
+      <div className="auth-page__brand"><MalawiMark /><Link to="/sign-in"><ArrowLeft size={17} />Back to sign in</Link></div>
+      <div className="auth-card" data-reveal="hero">
+        {sent ? <div className="auth-success"><span><Mail size={27} /></span><Eyebrow>Recovery email sent</Eyebrow><h1>Check your<br /><em>inbox.</em></h1><p>If an account exists for {email}, Supabase has sent a secure link. Open it on this device to choose a new password.</p><Link to="/sign-in" className="button button--gold">Return to sign in <ArrowRight size={18} /></Link></div> : <>
+          <Eyebrow>Secure account recovery</Eyebrow><h1>Find your<br /><em>way back.</em></h1><p>Enter the email address connected to your account. We will send a time-limited recovery link.</p>
+          <span className={`auth-mode ${configured ? 'auth-mode--live' : ''}`}>{configured ? 'Secure recovery connected' : 'Preview mode · backend keys pending'}</span>
+          <form onSubmit={handleResetRequest}>
+            <label>Email address<input type="email" required autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" /></label>
+            {error && <div className="auth-error" role="alert">{error}</div>}
+            <button className="button button--gold button--full" type="submit" disabled={busy}>{busy ? 'Sending secure link…' : 'Send recovery link'} <ArrowRight size={18} /></button>
+          </form>
+          <small className="auth-create">Remembered your password? <Link to="/sign-in">Sign in</Link></small>
+        </>}
+      </div>
+      <span className="auth-page__caption">Lake Malawi · The Lake of Stars</span>
+    </section>
+  )
+}
+
+function ResetPasswordPage() {
+  const location = useLocation()
+  const [password, setPassword] = useState('')
+  const [confirmation, setConfirmation] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [complete, setComplete] = useState(false)
+  const [error, setError] = useState('')
+  const { configured, loading, isPasswordRecovery, updatePassword } = useAuth()
+  const redirectError = new URLSearchParams(location.hash.replace(/^#/, '')).get('error_description')
+
+  const handlePasswordUpdate = async (event) => {
+    event.preventDefault()
+    setError('')
+    if (password.length < 8) { setError('Use at least 8 characters for your new password.'); return }
+    if (password !== confirmation) { setError('The passwords do not match.'); return }
+    setBusy(true)
+    try {
+      await updatePassword(password)
+      setComplete(true)
+      setPassword('')
+      setConfirmation('')
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Unable to update your password')
+    } finally { setBusy(false) }
+  }
+
+  const invalidRecovery = redirectError || (!loading && configured && !isPasswordRecovery)
+
+  return (
+    <section className="auth-page">
+      <Picture src={images.lakeSunset} alt="Lake Malawi at sunset" className="auth-page__image" />
+      <div className="auth-page__veil" />
+      <MotionLayer variant="auth" />
+      <div className="auth-page__brand"><MalawiMark /><Link to="/"><ArrowLeft size={17} />Back to Malawi</Link></div>
+      <div className="auth-card" data-reveal="hero">
+        {complete ? <div className="auth-success"><span><Check size={27} /></span><Eyebrow>Password updated</Eyebrow><h1>You are<br /><em>secure.</em></h1><p>Your new password is active. You can now sign in and continue to the editorial studio.</p><Link to="/sign-in?next=/admin" className="button button--gold">Sign in to the studio <ArrowRight size={18} /></Link></div> : invalidRecovery ? <div className="auth-success"><span><X size={27} /></span><Eyebrow>Recovery link unavailable</Eyebrow><h1>Request a<br /><em>fresh link.</em></h1><p>{redirectError ? decodeURIComponent(redirectError.replace(/\+/g, ' ')) : 'This recovery link has expired, has already been used, or was opened without a valid recovery session.'}</p><Link to="/forgot-password" className="button button--gold">Send a new recovery link <ArrowRight size={18} /></Link></div> : <>
+          <Eyebrow>Choose a new password</Eyebrow><h1>Secure your<br /><em>account.</em></h1><p>Create a password with at least eight characters. Use something memorable that you do not reuse elsewhere.</p>
+          <span className={`auth-mode ${configured ? 'auth-mode--live' : ''}`}>{loading ? 'Validating secure link…' : configured ? 'Recovery session verified' : 'Preview mode · backend keys pending'}</span>
+          <form onSubmit={handlePasswordUpdate}>
+            <label>New password<span className="password-field"><input type={showPassword ? 'text' : 'password'} required minLength="8" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="At least 8 characters" /><button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? 'Hide passwords' : 'Show passwords'}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></span></label>
+            <label>Confirm new password<input type={showPassword ? 'text' : 'password'} required minLength="8" autoComplete="new-password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="Repeat your new password" /></label>
+            {error && <div className="auth-error" role="alert">{error}</div>}
+            <button className="button button--gold button--full" type="submit" disabled={busy || loading}>{busy ? 'Updating password…' : 'Set new password'} <ArrowRight size={18} /></button>
+          </form>
         </>}
       </div>
       <span className="auth-page__caption">Lake Malawi · The Lake of Stars</span>
@@ -1147,6 +1241,8 @@ function App() {
         <Route path="/podcasts" element={<Navigate to="/media-library" replace />} />
         <Route path="/sign-in" element={<SignInPage />} />
         <Route path="/register" element={<SignInPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/login" element={<Navigate to="/sign-in" replace />} />
         <Route path="/privacy" element={<LegalPage type="privacy" />} />
         <Route path="/terms" element={<LegalPage type="terms" />} />
