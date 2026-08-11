@@ -5,6 +5,7 @@ import RootApp from './RootApp'
 import { AuthProvider } from './context/AuthContext'
 import { ContentProvider } from './context/ContentContext'
 import './styles.css'
+import './production.css'
 import './media.css'
 
 createRoot(document.getElementById('root')).render(
