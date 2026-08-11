@@ -1,6 +1,10 @@
+import { readFileSync } from 'node:fs'
+import { env } from 'node:process'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { env } from 'node:process'
+
+const virtualStylesId = 'virtual:core-styles.css'
+const resolvedVirtualStylesId = `\0${virtualStylesId}`
 
 const repairedCollectionStyles = `
 .map-feature h2 { margin-bottom: 25px; font-size: clamp(50px, 6vw, 80px); line-height: .95; }
@@ -54,16 +58,18 @@ const repairedCollectionStyles = `
 function repairLegacyStyles() {
   return {
     name: 'repair-legacy-styles',
-    enforce: 'pre',
-    transform(code, id) {
-      if (!id.endsWith('/src/styles.css') || !code.includes('tokens truncated')) return null
+    resolveId(id) {
+      if (id === virtualStylesId) return resolvedVirtualStylesId
+      return null
+    },
+    load(id) {
+      if (id !== resolvedVirtualStylesId) return null
 
-      const repaired = code.replace(
+      const source = readFileSync(new URL('./src/styles.css', import.meta.url), 'utf8')
+      return source.replace(
         /\.map-feature h2 \{[\s\S]*?\.performance-focus h3 \{ margin: 8px 0 10px; font-size: 52px; \}/,
         repairedCollectionStyles.trim(),
       )
-
-      return { code: repaired, map: null }
     },
   }
 }
