@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import RootApp from './RootApp'
 import { AuthProvider } from './context/AuthContext'
 import { ContentProvider } from './context/ContentContext'
-import './styles.css'
+import 'virtual:core-styles.css'
 import './production.css'
 import './media.css'
 
