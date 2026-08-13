@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://online-tourism-malawi.vercel.app/</loc><priority>1.0</priority></url>
+  <url><loc>https://online-tourism-malawi.vercel.app/segments</loc><priority>0.9</priority></url>
+  <url><loc>https://online-tourism-malawi.vercel.app/explore</loc><priority>0.95</priority></url>
+  <url><loc>https://online-tourism-malawi.vercel.app/museums</loc><priority>0.85</priority></url>
+  <url><loc>https://online-tourism-malawi.vercel.app/performance</loc><priority>0.85</priority></url>
+  <url><loc>https://online-tourism-malawi.vercel.app/visual-arts-crafts</loc><priority>0.75</priority></url>
+  <url><loc>https://online-tourism-malawi.vercel.app/books-press</loc><priority>0.75</priority></url>
+  <url><loc>https://online-tourism-malawi.vercel.app/media-library</loc><priority>0.9</priority></url>
+  <url><loc>https://online-tourism-malawi.vercel.app/design-creative</loc><priority>0.75</priority></url>
+  <url><loc>https://online-tourism-malawi.vercel.app/events</loc><priority>0.85</priority></url>
+  <url><loc>https://online-tourism-malawi.vercel.app/directory</loc><priority>0.8</priority></url>
+  <url><loc>https://online-tourism-malawi.vercel.app/plan-your-visit</loc><priority>0.9</priority></url>
+  <url><loc>https://online-tourism-malawi.vercel.app/about-us</loc><priority>0.65</priority></url>
+  <url><loc>https://online-tourism-malawi.vercel.app/contact</loc><priority>0.6</priority></url>
+  <url><loc>https://online-tourism-malawi.vercel.app/contribute</loc><priority>0.7</priority></url>
+</urlset>

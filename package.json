@@ -3,21 +3,27 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "packageManager": "pnpm@11.16.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "security:check": "node scripts/security-check.mjs",
+    "release:check": "node scripts/release-check.mjs",
+    "check": "pnpm run security:check && pnpm run lint && pnpm run build && pnpm run release:check"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.112.2",
+    "@vercel/analytics": "2.0.1",
+    "@vercel/speed-insights": "2.0.0",
     "@vitejs/plugin-react": "6.0.5",
-    "vite": "8.2.1",
-    "typescript": "7.0.2",
+    "lucide-react": "1.29.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-router-dom": "7.18.2",
-    "lucide-react": "1.29.0"
+    "typescript": "7.0.2",
+    "vite": "8.2.1"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
@@ -27,4 +33,3 @@
     "globals": "17.9.0"
   }
 }
-

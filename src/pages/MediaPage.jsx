@@ -36,8 +36,8 @@ const imageFallback = (event) => {
   event.currentTarget.parentElement?.classList.add('image-fallback')
 }
 
-function Picture({ src, alt, className = '' }) {
-  return <div className={`picture ${className}`}><img src={src} alt={alt} loading="lazy" onError={imageFallback} /></div>
+function Picture({ src, alt, className = '', priority = false }) {
+  return <div className={`picture ${className}`}><img src={src} alt={alt} loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : 'auto'} decoding="async" onError={imageFallback} /></div>
 }
 
 function Eyebrow({ children }) {
@@ -57,9 +57,25 @@ function MediaHeader() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const navigate = useNavigate()
-  const { user, signOut } = useAuth()
+  const { user } = useAuth()
 
   const close = () => { setMenuOpen(false); setSearchOpen(false) }
+  useEffect(() => {
+    if (!menuOpen && !searchOpen) return undefined
+    const previousOverflow = document.body.style.overflow
+    if (menuOpen) document.body.style.overflow = 'hidden'
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') {
+        setMenuOpen(false)
+        setSearchOpen(false)
+      }
+    }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [menuOpen, searchOpen])
   const submitSearch = (event) => {
     event.preventDefault()
     const query = new FormData(event.currentTarget).get('search')?.trim()
@@ -76,15 +92,15 @@ function MediaHeader() {
             {navigation.map((item) => <NavLink key={item.to} to={item.to} end={item.to === '/'} onClick={close}>{item.label}</NavLink>)}
           </nav>
           <div className="header-actions">
-            <button className="icon-button search-trigger" onClick={() => setSearchOpen((value) => !value)} aria-label="Search" aria-expanded={searchOpen}>{searchOpen ? <X size={19} /> : <Search size={19} />}</button>
+            <button className="icon-button search-trigger" onClick={() => setSearchOpen((value) => !value)} aria-label={searchOpen ? 'Close search' : 'Open search'} aria-expanded={searchOpen} aria-controls="media-site-search">{searchOpen ? <X size={19} /> : <Search size={19} />}</button>
             {user ? (
-              <button className="account-pill sign-in-link" onClick={signOut} title="Sign out"><span>{user.email?.slice(0, 1).toUpperCase()}</span>{user.email?.split('@')[0]}</button>
+              <Link className="account-pill sign-in-link" to="/account" title="Open your account"><span>{user.email?.slice(0, 1).toUpperCase()}</span>{user.email?.split('@')[0]}</Link>
             ) : <Link className="button button--gold button--small sign-in-link" to="/sign-in" onClick={close}>Sign in</Link>}
-            <button className="icon-button menu-trigger" onClick={() => setMenuOpen((value) => !value)} aria-label="Open menu" aria-expanded={menuOpen}>{menuOpen ? <X size={21} /> : <Menu size={21} />}</button>
+            <button className="icon-button menu-trigger" onClick={() => setMenuOpen((value) => !value)} aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen} aria-controls="media-mobile-navigation">{menuOpen ? <X size={21} /> : <Menu size={21} />}</button>
           </div>
         </div>
         {searchOpen && (
-          <div className="search-drawer">
+          <div className="search-drawer" id="media-site-search">
             <form className="shell search-drawer__form" onSubmit={submitSearch}>
               <Search size={22} />
               <input name="search" autoFocus aria-label="Search the Malawi collection" placeholder="Search museums, places, traditions and stories" />
@@ -93,7 +109,7 @@ function MediaHeader() {
           </div>
         )}
       </header>
-      <div className={`mobile-panel ${menuOpen ? 'mobile-panel--open' : ''}`} aria-hidden={!menuOpen}>
+      <div className={`mobile-panel ${menuOpen ? 'mobile-panel--open' : ''}`} id="media-mobile-navigation" role="dialog" aria-modal="true" aria-label="Site navigation" aria-hidden={!menuOpen} inert={!menuOpen ? true : undefined}>
         <div className="mobile-panel__top"><MalawiMark compact /><button className="icon-button" onClick={() => setMenuOpen(false)} aria-label="Close menu"><X size={21} /></button></div>
         <nav aria-label="Mobile navigation">
           {navigation.map((item, index) => <NavLink key={item.to} to={item.to} end={item.to === '/'} onClick={close}><span>0{index + 1}</span>{item.label}<ArrowUpRight size={20} /></NavLink>)}
@@ -158,19 +174,34 @@ function MediaCard({ item, onOpen }) {
 
 function MediaViewer({ item, onClose }) {
   useEffect(() => {
+    const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    const closeOnEscape = (event) => { if (event.key === 'Escape') onClose() }
-    window.addEventListener('keydown', closeOnEscape)
+    const handleDialogKeys = (event) => {
+      if (event.key === 'Escape') onClose()
+      if (event.key !== 'Tab') return
+      const focusable = Array.from(document.querySelectorAll('.media-viewer__panel a[href], .media-viewer__panel button:not([disabled]), .media-viewer__panel audio[controls], .media-viewer__panel iframe'))
+      if (!focusable.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+    window.addEventListener('keydown', handleDialogKeys)
     return () => {
-      document.body.style.overflow = ''
-      window.removeEventListener('keydown', closeOnEscape)
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', handleDialogKeys)
     }
   }, [onClose])
 
   return (
-    <div className="media-viewer" role="dialog" aria-modal="true" aria-label={item.title} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
+    <div className="media-viewer" role="dialog" aria-modal="true" aria-labelledby="media-viewer-title" aria-describedby="media-viewer-description" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
       <div className="media-viewer__panel">
-        <button className="media-viewer__close" onClick={onClose} aria-label="Close media viewer"><X size={22} /></button>
+        <button className="media-viewer__close" onClick={onClose} aria-label="Close media viewer" autoFocus><X size={22} /></button>
         <div className="media-viewer__stage">
           {item.embed_url ? (
             <iframe
@@ -178,6 +209,7 @@ function MediaViewer({ item, onClose }) {
               title={item.title}
               allow="autoplay; encrypted-media; picture-in-picture; web-share"
               referrerPolicy="strict-origin-when-cross-origin"
+              loading="lazy"
               allowFullScreen
             />
           ) : item.media_url ? (
@@ -188,7 +220,7 @@ function MediaViewer({ item, onClose }) {
           ) : <Picture src={item.image} alt={item.title} className="media-viewer__image" />}
         </div>
         <div className="media-viewer__details">
-          <div><small>{item.media_type} · {item.category}</small><h2>{item.title}</h2><p>{item.description}</p></div>
+          <div><small>{item.media_type} · {item.category}</small><h2 id="media-viewer-title">{item.title}</h2><p id="media-viewer-description">{item.description}</p></div>
           <div className="media-viewer__meta">
             {item.location && <span><MapPin size={15} />{item.location}</span>}
             <span>Source: {item.source_name}</span>
@@ -273,9 +305,9 @@ export default function MediaPage() {
     <>
       <a className="skip-link" href="#media-main">Skip to media</a>
       <MediaHeader />
-      <main id="media-main">
+      <main id="media-main" tabIndex={-1}>
         <section className="page-hero media-live-hero">
-          <Picture src={images.ilala} alt="Historic view of the Ilala on Lake Malawi" className="page-hero__image" />
+          <Picture src={images.ilala} alt="Historic view of the Ilala on Lake Malawi" className="page-hero__image" priority />
           <div className="page-hero__shade" />
           <div className="shell page-hero__content">
             <Eyebrow>Watch · Listen · Remember</Eyebrow>

@@ -17,6 +17,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -26,8 +27,8 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - run: pnpm install --lockfile=false
-      - run: pnpm build
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run check
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}

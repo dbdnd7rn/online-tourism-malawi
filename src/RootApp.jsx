@@ -1,12 +1,21 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
-import App from './App'
-import MediaPage from './pages/MediaPage'
+
+const App = lazy(() => import('./App'))
+const MediaPage = lazy(() => import('./pages/MediaPage'))
+
+function RouteLoading() {
+  return <main className="route-loader" aria-busy="true" aria-live="polite"><div><span /><p>Opening Malawi&hellip;</p></div></main>
+}
 
 export default function RootApp() {
   const location = useLocation()
 
-  if (location.pathname === '/media-library') return <MediaPage />
   if (location.pathname === '/media' || location.pathname === '/podcasts') return <Navigate to="/media-library" replace />
 
-  return <App />
+  return (
+    <Suspense fallback={<RouteLoading />}>
+      {location.pathname === '/media-library' ? <MediaPage /> : <App />}
+    </Suspense>
+  )
 }

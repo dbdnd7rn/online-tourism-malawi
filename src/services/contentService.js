@@ -1,4 +1,5 @@
 import {
+  creativeDirectory as fallbackCreatives,
   events as fallbackEvents,
   heritageItems as fallbackHeritage,
   mediaItems as fallbackMediaItems,
@@ -9,6 +10,7 @@ import {
 import { supabase } from '../lib/supabase'
 
 export const fallbackContent = {
+  creatives: fallbackCreatives,
   events: fallbackEvents,
   heritageItems: fallbackHeritage,
   mediaItems: fallbackMediaItems,
@@ -18,6 +20,7 @@ export const fallbackContent = {
 }
 
 const tables = {
+  creatives: 'creative_profiles',
   events: 'events',
   heritageItems: 'heritage_items',
   mediaItems: 'media_items',
@@ -36,6 +39,7 @@ export async function loadPublishedContent() {
           .from(table)
           .select('*')
           .eq('published', true)
+          .order('featured', { ascending: false })
           .order('sort_order', { ascending: true })
 
         if (error) throw error

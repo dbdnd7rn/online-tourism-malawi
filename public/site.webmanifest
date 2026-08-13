@@ -1,0 +1,10 @@
+{
+  "name": "Online Tourism Malawi",
+  "short_name": "Tourism Malawi",
+  "description": "A digital gateway to Malawi's heritage, museums, creative sectors, media and responsible travel planning.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#090b0b",
+  "theme_color": "#0b0c0c"
+}
