@@ -23,8 +23,8 @@ import { images } from '../data/content'
 
 const navigation = [
   { label: 'Home', to: '/' },
-  { label: 'Explore', to: '/explore' },
-  { label: 'Museums', to: '/museums' },
+  { label: 'Sectors', to: '/segments' },
+  { label: 'Heritage', to: '/explore' },
   { label: 'Performance', to: '/performance' },
   { label: 'Events', to: '/events' },
   { label: 'Media', to: '/media-library' },
