@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ArrowDownRight,
   ArrowLeft,
@@ -55,6 +55,31 @@ const navigation = [
   { label: 'About', to: '/about-us' },
 ]
 
+const siteOrigin = 'https://online-tourism-malawi.vercel.app'
+const defaultSeo = {
+  title: 'Online Tourism Malawi',
+  description: 'Discover the art, heritage, museums, landscapes and living traditions of Malawi.',
+}
+const routeSeo = [
+  ['/', 'Online Tourism Malawi', defaultSeo.description],
+  ['/segments', 'Creative Sectors | Online Tourism Malawi', 'Explore Malawi through heritage, performance, visual arts, books, media, design and creative industries.'],
+  ['/explore', 'Cultural & Natural Heritage | Online Tourism Malawi', 'Explore Malawi heritage places, museums, cultural landscapes and natural wonders in one living collection.'],
+  ['/museums', 'Museums & Collections | Online Tourism Malawi', 'Meet the museums, archives and cultural centres preserving Malawi history, objects and public memory.'],
+  ['/performance', 'Performance & Celebration | Online Tourism Malawi', 'Discover Malawian performing arts, music, festivals, fairs and celebrations rooted in community life.'],
+  ['/visual-arts-crafts', 'Visual Arts & Crafts | Online Tourism Malawi', 'Find Malawian fine arts, photography, craft traditions and creative makers across the country.'],
+  ['/books-press', 'Books & Press | Online Tourism Malawi', 'Explore Malawi books, newspapers, magazines, libraries and literary gatherings.'],
+  ['/media-library', 'Media Library & Podcasts | Online Tourism Malawi', 'Watch, listen and explore Malawi through video, audio, podcasting, archives and interactive media.'],
+  ['/design-creative', 'Design & Creative | Online Tourism Malawi', 'Discover Malawi fashion, architecture, graphic design, interiors and landscape design.'],
+  ['/events', 'Events | Online Tourism Malawi', 'Find festivals, performances, exhibitions and cultural gatherings across Malawi.'],
+  ['/directory', 'Creative Directory | Online Tourism Malawi', 'Browse Malawian makers, studios, organisations and cultural enterprises across the creative sectors.'],
+  ['/plan-your-visit', 'Plan Your Visit | Online Tourism Malawi', 'Build a thoughtful Malawi route around heritage places, museums, events, media and local context.'],
+  ['/about-us', 'About Us | Online Tourism Malawi', 'Learn how Online Tourism Malawi connects culture, heritage, responsible travel and digital access.'],
+  ['/contact', 'Contact | Online Tourism Malawi', 'Contact the Online Tourism Malawi team about partnerships, collections, events and platform questions.'],
+  ['/contribute', 'Contribute | Online Tourism Malawi', 'Submit a story, event, correction or creative profile for editorial review.'],
+  ['/account', 'My Collection | Online Tourism Malawi', 'View and manage saved Malawi stories, places, events and media.'],
+  ['/sign-in', 'Sign In | Online Tourism Malawi', 'Sign in to save discoveries and access the Online Tourism Malawi editorial studio.'],
+]
+
 const heritageMapStops = [
   { id: 'north', name: 'Karonga & Nyika', region: 'Northern Region', query: 'Northern Region', copy: 'Fossil landscapes, high plateaux, living collections and the Nyika–Vwaza conservation system.' },
   { id: 'centre', name: 'Dedza & the Lake', region: 'Central Region', query: 'Central Region', copy: 'Rock art, cultural centres and lakeshore stories connect place, memory and creative practice.' },
@@ -67,6 +92,14 @@ const slugify = (value = '') => value
   .replace(/[\u0300-\u036f]/g, '')
   .replace(/[^a-z0-9]+/g, '-')
   .replace(/(^-|-$)/g, '')
+
+const newPasswordIssue = (value) => {
+  if (value.length < 12) return 'Use at least 12 characters.'
+  if (!/[a-z]/.test(value) || !/[A-Z]/.test(value) || !/[0-9]/.test(value)) {
+    return 'Include an uppercase letter, a lowercase letter and a number.'
+  }
+  return ''
+}
 
 const buildHeritageCatalogue = (publishedItems = []) => {
   const catalogue = new Map(
@@ -308,6 +341,7 @@ function Footer() {
 function Layout({ children }) {
   const location = useLocation()
   const scrollProgress = useScrollProgress()
+  useRouteSeo(location.pathname)
   useRevealMotion(location.pathname)
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }) }, [location.pathname])
   return (
@@ -336,6 +370,38 @@ function SectionHeading({ eyebrow, title, copy, action, inverse = false }) {
 
 function Picture({ src, alt, className = '' }) {
   return <div className={`picture ${className}`}><img src={src} alt={alt} loading="lazy" onError={imageFallback} /></div>
+}
+
+function setDocumentMeta(selector, attribute, value) {
+  let element = document.head.querySelector(selector)
+  if (!element) {
+    element = document.createElement(selector.startsWith('link') ? 'link' : 'meta')
+    const nameMatch = selector.match(/\[(name|property|rel)="([^"]+)"\]/)
+    if (nameMatch) element.setAttribute(nameMatch[1], nameMatch[2])
+    document.head.appendChild(element)
+  }
+  element.setAttribute(attribute, value)
+}
+
+function useRouteSeo(pathname) {
+  useEffect(() => {
+    const detailRoute = pathname.startsWith('/heritage/') || pathname.startsWith('/museums/') || pathname.startsWith('/events/') || pathname.startsWith('/directory/')
+    const matched = routeSeo.find(([route]) => route === pathname)
+    const title = detailRoute ? 'Malawi Discovery | Online Tourism Malawi' : matched?.[1] || defaultSeo.title
+    const description = detailRoute
+      ? 'Explore this Malawi story with context, practical details and related discoveries.'
+      : matched?.[2] || defaultSeo.description
+    const canonical = `${siteOrigin}${pathname === '/' ? '/' : pathname}`
+
+    document.title = title
+    setDocumentMeta('meta[name="description"]', 'content', description)
+    setDocumentMeta('meta[property="og:title"]', 'content', title)
+    setDocumentMeta('meta[property="og:description"]', 'content', description)
+    setDocumentMeta('meta[property="og:url"]', 'content', canonical)
+    setDocumentMeta('meta[name="twitter:title"]', 'content', title)
+    setDocumentMeta('meta[name="twitter:description"]', 'content', description)
+    setDocumentMeta('link[rel="canonical"]', 'href', canonical)
+  }, [pathname])
 }
 
 function PageHero({ eyebrow, title, copy, image, imageAlt, children, tall = false }) {
@@ -486,7 +552,9 @@ function Newsletter() {
     setBusy(true)
     setError('')
     try {
-      const email = new FormData(event.currentTarget).get('email')
+      const form = new FormData(event.currentTarget)
+      if (form.get('company_site')) { setSent(true); return }
+      const email = form.get('email')
       await subscribeToNewsletter(email)
       setSent(true)
     } catch (reason) {
@@ -500,7 +568,8 @@ function Newsletter() {
         {sent ? <div className="form-success"><Check size={21} /> Zikomo! Your next letter is on its way.</div> : (
           <form onSubmit={submitNewsletter}>
             <label htmlFor="newsletter-email">Your email address</label>
-            <div><input id="newsletter-email" name="email" type="email" required placeholder="you@example.com" /><button type="submit" disabled={busy}>{busy ? 'Joining…' : 'Join us'} <MoveRight size={18} /></button></div>
+            <label className="form-honeypot" aria-hidden="true">Company website<input name="company_site" type="text" tabIndex="-1" autoComplete="off" /></label>
+            <div><input id="newsletter-email" name="email" type="email" required maxLength="320" autoComplete="email" placeholder="you@example.com" /><button type="submit" disabled={busy}>{busy ? 'Joining…' : 'Join us'} <MoveRight size={18} /></button></div>
             {error && <small className="form-error" role="alert">{error}</small>}
             <small>Monthly stories, cultural notes and event highlights. No clutter.</small>
           </form>
@@ -992,6 +1061,71 @@ function AboutPage() {
 }
 
 function PlanVisitPage() {
+  const { heritageItems, museums, events, mediaItems } = useContent()
+  const [region, setRegion] = useState('Across Malawi')
+  const [duration, setDuration] = useState('5 days')
+  const [pace, setPace] = useState('Balanced')
+  const heritageCatalogue = useMemo(() => buildHeritageCatalogue(heritageItems), [heritageItems])
+  const durationOptions = ['3 days', '5 days', '7 days']
+  const paceOptions = ['Gentle', 'Balanced', 'Immersive']
+  const dayCount = Number.parseInt(duration, 10)
+  const matchRegion = useCallback((item) => {
+    if (region === 'Across Malawi') return true
+    const regionKeys = {
+      'Northern Malawi': ['northern', 'karonga', 'nyika', 'rumphi', 'chitipa', 'mzuzu'],
+      'Central Malawi': ['central', 'lilongwe', 'dowa', 'dedza', 'salima', 'mua'],
+      'Southern Malawi': ['southern', 'blantyre', 'zomba', 'mulanje', 'mangochi', 'nsanje', 'machinga', 'shire'],
+    }
+    const haystack = `${item.title || ''} ${item.location || ''} ${item.region || ''} ${item.place || ''} ${item.category || ''}`.toLowerCase()
+    return (regionKeys[region] || []).some((key) => haystack.includes(key))
+  }, [region])
+  const places = useMemo(() => {
+    const heritageStops = heritageCatalogue.map((item) => ({
+      ...item,
+      route: `/heritage/${item.slug || slugify(item.title)}`,
+      kind: item.type || 'Heritage place',
+      note: item.summary,
+    }))
+    const museumStops = museums.map((item) => ({
+      ...item,
+      route: `/museums/${item.slug || slugify(item.title)}`,
+      kind: 'Museum & collection',
+      note: item.detail,
+      region: item.region || item.location,
+    }))
+    const filtered = [...heritageStops, ...museumStops].filter(matchRegion)
+    return filtered.length ? filtered : [...heritageStops, ...museumStops]
+  }, [heritageCatalogue, museums, matchRegion])
+  const eventPool = useMemo(() => {
+    const filtered = events.filter(matchRegion)
+    return filtered.length ? filtered : events
+  }, [events, matchRegion])
+  const mediaPool = useMemo(() => {
+    const filtered = mediaItems.filter(matchRegion)
+    return filtered.length ? filtered : mediaItems
+  }, [mediaItems, matchRegion])
+  const itinerary = useMemo(() => {
+    const verbs = {
+      Gentle: ['Arrive slowly', 'Listen carefully', 'Rest beside the story'],
+      Balanced: ['Begin with context', 'Move through the landscape', 'Close with culture'],
+      Immersive: ['Follow the trail', 'Meet the custodians', 'Stay for the gathering'],
+    }
+    return Array.from({ length: dayCount }, (_, index) => {
+      const primary = places[index % places.length]
+      const secondary = places[(index + 2) % places.length]
+      const event = eventPool[index % eventPool.length]
+      const media = mediaPool[index % mediaPool.length]
+      const rhythm = verbs[pace][index % verbs[pace].length]
+      return {
+        number: String(index + 1).padStart(2, '0'),
+        title: `${rhythm} in ${primary?.location || region}`,
+        place: primary,
+        second: secondary,
+        event,
+        media,
+      }
+    })
+  }, [dayCount, eventPool, mediaPool, pace, places, region])
   const regions = [
     ['Northern Malawi', 'High plateaux, living traditions and long horizons.', images.nyika, 'Nyika · Karonga · Mzuzu'],
     ['Central Malawi', 'The capital, cultural landscapes and the lake’s broad centre.', images.lake, 'Lilongwe · Dedza · Salima'],
@@ -1002,8 +1136,42 @@ function PlanVisitPage() {
       <PageHero eyebrow="Travel with context" title={<>Plan Your<br /><em>Malawi Journey</em></>} copy="Build a thoughtful route through the Warm Heart of Africa—from cultural spaces and creative events to mountains, wildlife and the lake." image={images.lakeSunset} imageAlt="Sunset across Lake Malawi" tall>
         <a href="#regions" className="button button--gold">Explore the regions <ArrowDownRight size={18} /></a>
       </PageHero>
+      <section className="planner-workbench section section--paper">
+        <div className="shell">
+          <SectionHeading eyebrow="Journey builder" title={<>Shape a route<br /><em>around culture.</em></>} copy="Choose a region, pace and length. The planner draws from places, museums, events and media already inside the platform." />
+          <div className="planner-controls" data-reveal="up">
+            <div><span>Region</span><div className="filter-row" role="group" aria-label="Choose a region">{['Across Malawi', ...regions.map(([title]) => title)].map((item) => <button key={item} className={region === item ? 'active' : ''} onClick={() => setRegion(item)}>{item}</button>)}</div></div>
+            <div><span>Length</span><div className="filter-row" role="group" aria-label="Choose trip length">{durationOptions.map((item) => <button key={item} className={duration === item ? 'active' : ''} onClick={() => setDuration(item)}>{item}</button>)}</div></div>
+            <div><span>Pace</span><div className="filter-row" role="group" aria-label="Choose travel pace">{paceOptions.map((item) => <button key={item} className={pace === item ? 'active' : ''} onClick={() => setPace(item)}>{item}</button>)}</div></div>
+          </div>
+          <div className="planner-summary" data-reveal="up">
+            <div><strong>{String(dayCount).padStart(2, '0')}</strong><span>suggested days</span></div>
+            <div><strong>{String(places.length).padStart(2, '0')}</strong><span>matched places</span></div>
+            <div><strong>{String(eventPool.length).padStart(2, '0')}</strong><span>event anchors</span></div>
+            <div><strong>{pace}</strong><span>travel rhythm</span></div>
+          </div>
+          <div className="itinerary-board">
+            {itinerary.map((day, index) => (
+              <article className="itinerary-day" key={`${day.number}-${day.title}`} data-reveal="card" data-reveal-delay={`${index * 70}ms`}>
+                <span>{day.number}</span>
+                <div>
+                  <small>{region} / {pace}</small>
+                  <h3>{day.title}</h3>
+                  <p>{day.place?.note || 'Begin with local context, then leave time for the route itself to breathe.'}</p>
+                  <div className="itinerary-links">
+                    {day.place && <Link to={day.place.route}><MapPin size={15} />{day.place.title}</Link>}
+                    {day.second && <Link to={day.second.route}><BookOpen size={15} />{day.second.title}</Link>}
+                    {day.event && <Link to={`/events/${day.event.slug || slugify(day.event.title)}`}><CalendarDays size={15} />{day.event.title}</Link>}
+                    {day.media && <Link to="/media-library"><Play size={15} fill="currentColor" />{day.media.title}</Link>}
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
       <section id="regions" className="section section--ivory"><div className="shell"><SectionHeading eyebrow="North · Centre · South" title={<>Three regions.<br /><em>Endless ways in.</em></>} copy="Use these regional starting points, then check current transport, access and safety information before departure." />
-        <div className="region-grid">{regions.map(([title, copy, image, places], index) => <article key={title} data-reveal="card" data-reveal-delay={`${index * 75}ms`}><Picture src={image} alt={title} /><span>0{index + 1}</span><div><h2>{title}</h2><p>{copy}</p><small>{places}</small></div></article>)}</div>
+        <div className="region-grid">{regions.map(([title, copy, image, places], index) => <article key={title} data-reveal="card" data-reveal-delay={`${index * 75}ms`}><Picture src={image} alt={title} /><span>0{index + 1}</span><div><h2>{title}</h2><p>{copy}</p><small>{places}</small><button type="button" onClick={() => setRegion(title)}>Build this route <ArrowRight size={15} /></button></div></article>)}</div>
       </div></section>
       <section className="visit-essentials"><div className="shell"><SectionHeading inverse eyebrow="Before you travel" title="Practical essentials" />
         <div className="essential-grid">{[
@@ -1028,6 +1196,7 @@ function ContactPage() {
     setError('')
     const form = new FormData(event.currentTarget)
     try {
+      if (form.get('company_site')) { setSent(true); return }
       await sendContactMessage({ name: form.get('name'), email: form.get('email'), subject: form.get('subject'), message: form.get('message') })
       setSent(true)
     } catch (reason) {
@@ -1039,7 +1208,7 @@ function ContactPage() {
       <PageHero eyebrow="We would love to hear from you" title={<>Contact<br /><em>the Team</em></>} copy="Ask about the platform, suggest a correction, explore a partnership or point us towards a story." image={images.childrenLake} imageAlt="People connecting beside Lake Malawi" />
       <section className="section section--ivory contact-page"><div className="shell contact-page__grid">
         <aside data-reveal="up"><Eyebrow>Online Tourism Malawi</Eyebrow><h2>Let’s begin a<br /><em>conversation.</em></h2><p>Our launch contact details are editorial placeholders until the operating organisation confirms them.</p><div className="contact-details"><a href="mailto:hello@tourismmalawi.mw"><Mail size={18} /><span>Email<strong>hello@tourismmalawi.mw</strong></span></a><div><MapPin size={18} /><span>Office<strong>Lilongwe, Malawi</strong></span></div><div><Clock3 size={18} /><span>Hours<strong>Mon–Fri · 08:00–17:00</strong></span></div></div></aside>
-        <div className="form-panel" data-reveal="up">{sent ? <div className="submission-success"><span><Check size={28} /></span><Eyebrow>Message received</Eyebrow><h2>Zikomo.</h2><p>Thank you for reaching out. The team will reply using the address you provided.</p><button className="button button--outline" onClick={() => setSent(false)}>Send another message</button></div> : <form onSubmit={submit}><div className="form-grid"><label>Full name<input name="name" required /></label><label>Email address<input name="email" type="email" required /></label></div><label>Subject<select name="subject" required defaultValue=""><option value="" disabled>Choose a subject</option><option>General enquiry</option><option>Partnership</option><option>Content correction</option><option>Media request</option><option>Technical support</option></select></label><label>Message<textarea name="message" rows="7" required placeholder="Tell us how we can help" /></label>{error && <div className="auth-error" role="alert">{error}</div>}<button className="button button--gold" type="submit" disabled={busy}>{busy ? 'Sending…' : 'Send message'} <Send size={17} /></button></form>}</div>
+        <div className="form-panel" data-reveal="up">{sent ? <div className="submission-success"><span><Check size={28} /></span><Eyebrow>Message received</Eyebrow><h2>Zikomo.</h2><p>Thank you for reaching out. The team will reply using the address you provided.</p><button className="button button--outline" onClick={() => setSent(false)}>Send another message</button></div> : <form onSubmit={submit}><label className="form-honeypot" aria-hidden="true">Company website<input name="company_site" type="text" tabIndex="-1" autoComplete="off" /></label><div className="form-grid"><label>Full name<input name="name" required minLength="2" maxLength="120" autoComplete="name" /></label><label>Email address<input name="email" type="email" required maxLength="320" autoComplete="email" /></label></div><label>Subject<select name="subject" required defaultValue=""><option value="" disabled>Choose a subject</option><option>General enquiry</option><option>Partnership</option><option>Content correction</option><option>Media request</option><option>Technical support</option></select></label><label>Message<textarea name="message" rows="7" required minLength="10" maxLength="5000" placeholder="Tell us how we can help" /></label>{error && <div className="auth-error" role="alert">{error}</div>}<button className="button button--gold" type="submit" disabled={busy}>{busy ? 'Sending…' : 'Send message'} <Send size={17} /></button></form>}</div>
       </div></section>
     </>
   )
@@ -1058,6 +1227,7 @@ function ContributePage() {
     setError('')
     const form = new FormData(event.currentTarget)
     try {
+      if (form.get('company_site')) { setSent(true); return }
       await createContribution({
         user_id: user?.id === 'preview-user' ? null : user?.id || null,
         submission_type: form.get('submission_type'),
@@ -1077,7 +1247,7 @@ function ContributePage() {
       <PageHero eyebrow="Build the archive with us" title={<>Contribute<br /><em>a Story</em></>} copy="Share an event, creative profile, correction or story lead with the editorial team." image={images.chongoni} imageAlt="Layered stories at the Chongoni Rock Art Area" />
       <section className="section section--paper contribute-page"><div className="shell contribute-page__grid">
         <aside data-reveal="up"><Eyebrow>What happens next</Eyebrow><h2>Received with care.<br /><em>Reviewed by people.</em></h2><ol><li><span>01</span>We acknowledge the submission.</li><li><span>02</span>An editor checks context and contact details.</li><li><span>03</span>We seek consent and verification before publishing.</li></ol><p>Sensitive cultural knowledge should only be submitted with the permission of the appropriate custodians.</p></aside>
-        <div className="form-panel" data-reveal="up">{sent ? <div className="submission-success"><span><Check size={28} /></span><Eyebrow>Contribution received</Eyebrow><h2>Zikomo.</h2><p>Your submission is now in the editorial review queue.</p><button className="button button--outline" onClick={() => setSent(false)}>Submit another</button></div> : <form onSubmit={submit}><label>Contribution type<select name="submission_type" defaultValue={initialType}><option value="story">Story or oral history</option><option value="event">Event</option><option value="creative_profile">Creative directory profile</option><option value="correction">Correction or update</option></select></label><div className="form-grid"><label>Your name<input name="name" required defaultValue={user?.user_metadata?.display_name || ''} /></label><label>Email address<input name="email" type="email" required defaultValue={user?.email || ''} /></label></div><label>Title<input name="title" required placeholder="A short, clear title" /></label><div className="form-grid"><label>Location<input name="location" placeholder="Town, district or region" /></label><label>Website or reference link<input name="website" type="url" placeholder="https://" /></label></div><label>Tell us about it<textarea name="description" rows="7" required placeholder="Include the context, people involved and why this belongs in the collection." /></label>{error && <div className="auth-error" role="alert">{error}</div>}<button className="button button--gold" type="submit" disabled={busy}>{busy ? 'Submitting…' : 'Send for review'} <Send size={17} /></button></form>}</div>
+        <div className="form-panel" data-reveal="up">{sent ? <div className="submission-success"><span><Check size={28} /></span><Eyebrow>Contribution received</Eyebrow><h2>Zikomo.</h2><p>Your submission is now in the editorial review queue.</p><button className="button button--outline" onClick={() => setSent(false)}>Submit another</button></div> : <form onSubmit={submit}><label className="form-honeypot" aria-hidden="true">Company website<input name="company_site" type="text" tabIndex="-1" autoComplete="off" /></label><label>Contribution type<select name="submission_type" defaultValue={initialType}><option value="story">Story or oral history</option><option value="event">Event</option><option value="creative_profile">Creative directory profile</option><option value="correction">Correction or update</option></select></label><div className="form-grid"><label>Your name<input name="name" required minLength="2" maxLength="120" autoComplete="name" defaultValue={user?.user_metadata?.display_name || ''} /></label><label>Email address<input name="email" type="email" required maxLength="320" autoComplete="email" defaultValue={user?.email || ''} /></label></div><label>Title<input name="title" required minLength="2" maxLength="180" placeholder="A short, clear title" /></label><div className="form-grid"><label>Location<input name="location" maxLength="180" placeholder="Town, district or region" /></label><label>Website or reference link<input name="website" type="url" maxLength="2048" placeholder="https://" /></label></div><label>Tell us about it<textarea name="description" rows="7" required minLength="20" maxLength="15000" placeholder="Include the context, people involved and why this belongs in the collection." /></label>{error && <div className="auth-error" role="alert">{error}</div>}<button className="button button--gold" type="submit" disabled={busy}>{busy ? 'Submitting…' : 'Send for review'} <Send size={17} /></button></form>}</div>
       </div></section>
     </>
   )
@@ -1166,10 +1336,24 @@ function SignInPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [magicSent, setMagicSent] = useState(false)
-  const { user, configured, signIn, signUp, sendMagicLink } = useAuth()
+  const {
+    user,
+    configured,
+    previewMode,
+    configurationError,
+    signIn,
+    signUp,
+    sendMagicLink,
+  } = useAuth()
+  const authReady = configured || previewMode
 
   const handleSignIn = async (event) => {
     event.preventDefault()
+    if (!authReady) { setError(configurationError); return }
+    if (authMode === 'register') {
+      const passwordIssue = newPasswordIssue(password)
+      if (passwordIssue) { setError(passwordIssue); return }
+    }
     setBusy(true)
     setError('')
     try {
@@ -1182,13 +1366,14 @@ function SignInPage() {
   }
 
   const handleMagicLink = async () => {
+    if (!authReady) { setError(configurationError); return }
     if (!email) { setError('Enter your email address first.'); return }
     setBusy(true)
     setError('')
     try {
       await sendMagicLink(email)
       setMagicSent(true)
-      if (!configured) setSubmitted(true)
+      if (previewMode) setSubmitted(true)
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Unable to send a magic link')
     } finally { setBusy(false) }
@@ -1201,18 +1386,19 @@ function SignInPage() {
       <MotionLayer variant="auth" />
       <div className="auth-page__brand"><MalawiMark /><Link to="/"><ArrowLeft size={17} />Back to Malawi</Link></div>
       <div className="auth-card" data-reveal="hero">
-        {submitted || user ? <div className="auth-success"><span><Check size={27} /></span><Eyebrow>{authMode === 'register' ? 'Account created' : 'Welcome back'}</Eyebrow><h1>Your journey<br /><em>continues.</em></h1><p>{configured ? authMode === 'register' ? `Your account is ready. Check ${email} if email confirmation is enabled.` : `Signed in securely as ${user?.email || email}.` : 'Preview session active. Add the Supabase environment keys to enable secure production authentication.'}</p><Link to={nextRoute} className="button button--gold">{nextRoute.startsWith('/admin') ? 'Continue to the studio' : 'Continue to your collection'} <ArrowRight size={18} /></Link></div> : <>
+        {submitted || user ? <div className="auth-success"><span><Check size={27} /></span><Eyebrow>{authMode === 'register' ? 'Account created' : 'Welcome back'}</Eyebrow><h1>Your journey<br /><em>continues.</em></h1><p>{configured ? authMode === 'register' ? `Your account is ready. Check ${email} if email confirmation is enabled.` : `Signed in securely as ${user?.email || email}.` : 'Development preview session active. Production authentication remains locked until Supabase is configured.'}</p><Link to={nextRoute} className="button button--gold">{nextRoute.startsWith('/admin') ? 'Continue to the studio' : 'Continue to your collection'} <ArrowRight size={18} /></Link></div> : <>
           <Eyebrow>Member access</Eyebrow><h1>{authMode === 'register' ? <>Join the<br /><em>journey.</em></> : <>Welcome<br /><em>back.</em></>}</h1><p>{authMode === 'register' ? 'Create an account to save discoveries and contribute to the collection.' : 'Sign in to save stories, build collections and continue listening.'}</p>
-          <span className={`auth-mode ${configured ? 'auth-mode--live' : ''}`}>{configured ? 'Secure authentication connected' : 'Preview mode · backend keys pending'}</span>
+          <span className={`auth-mode ${configured ? 'auth-mode--live' : previewMode ? 'auth-mode--preview' : 'auth-mode--locked'}`}>{configured ? 'Secure authentication connected' : previewMode ? 'Development preview · no live data' : 'Account services locked'}</span>
+          {!authReady && <div className="auth-error" role="alert">{configurationError}</div>}
           <form onSubmit={handleSignIn}>
-            {authMode === 'register' && <label>Display name<input type="text" required value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder="How should we welcome you?" /></label>}
-            <label>Email address<input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" /></label>
-            <label>Password<span className="password-field"><input type={showPassword ? 'text' : 'password'} required minLength="6" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" /><button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></span></label>
-            <div className="auth-options"><label><input type="checkbox" /> Remember me</label><Link to="/forgot-password">Forgot password?</Link></div>
+            {authMode === 'register' && <label>Display name<input type="text" required disabled={!authReady} value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder="How should we welcome you?" autoComplete="name" /></label>}
+            <label>Email address<input type="email" required disabled={!authReady} value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" autoComplete="email" /></label>
+            <label>Password<span className="password-field"><input type={showPassword ? 'text' : 'password'} required disabled={!authReady} minLength={authMode === 'register' ? 12 : 6} value={password} onChange={(event) => setPassword(event.target.value)} placeholder={authMode === 'register' ? '12+ characters, mixed case and a number' : 'Enter your password'} autoComplete={authMode === 'register' ? 'new-password' : 'current-password'} /><button type="button" disabled={!authReady} onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></span></label>
+            <div className="auth-options"><span>Encrypted session</span><Link to="/forgot-password">Forgot password?</Link></div>
             {error && <div className="auth-error" role="alert">{error}</div>}
-            <button className="button button--gold button--full" type="submit" disabled={busy}>{busy ? 'Please wait…' : authMode === 'register' ? 'Create account' : 'Sign in'} <ArrowRight size={18} /></button>
+            <button className="button button--gold button--full" type="submit" disabled={busy || !authReady}>{busy ? 'Please wait…' : authMode === 'register' ? 'Create account' : 'Sign in'} <ArrowRight size={18} /></button>
           </form>
-          {authMode === 'signin' && <><div className="auth-divider"><span>or</span></div><button className="button button--quiet button--full" disabled={busy} onClick={handleMagicLink}><Mail size={18} />{magicSent ? 'Magic link sent' : 'Continue with a magic link'}</button></>}
+          {authMode === 'signin' && <><div className="auth-divider"><span>or</span></div><button className="button button--quiet button--full" disabled={busy || !authReady} onClick={handleMagicLink}><Mail size={18} />{magicSent ? 'Magic link sent' : 'Continue with a magic link'}</button></>}
           <small className="auth-create">{authMode === 'register' ? 'Already a member?' : 'New here?'} <button type="button" onClick={() => { setAuthMode((mode) => mode === 'register' ? 'signin' : 'register'); setError('') }}>{authMode === 'register' ? 'Sign in' : 'Create an account'}</button></small>
         </>}
       </div>
@@ -1226,10 +1412,12 @@ function ForgotPasswordPage() {
   const [busy, setBusy] = useState(false)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState('')
-  const { configured, requestPasswordReset } = useAuth()
+  const { configured, previewMode, configurationError, requestPasswordReset } = useAuth()
+  const authReady = configured || previewMode
 
   const handleResetRequest = async (event) => {
     event.preventDefault()
+    if (!authReady) { setError(configurationError); return }
     setBusy(true)
     setError('')
     try {
@@ -1249,11 +1437,12 @@ function ForgotPasswordPage() {
       <div className="auth-card" data-reveal="hero">
         {sent ? <div className="auth-success"><span><Mail size={27} /></span><Eyebrow>Recovery email sent</Eyebrow><h1>Check your<br /><em>inbox.</em></h1><p>If an account exists for {email}, Supabase has sent a secure link. Open it on this device to choose a new password.</p><Link to="/sign-in" className="button button--gold">Return to sign in <ArrowRight size={18} /></Link></div> : <>
           <Eyebrow>Secure account recovery</Eyebrow><h1>Find your<br /><em>way back.</em></h1><p>Enter the email address connected to your account. We will send a time-limited recovery link.</p>
-          <span className={`auth-mode ${configured ? 'auth-mode--live' : ''}`}>{configured ? 'Secure recovery connected' : 'Preview mode · backend keys pending'}</span>
+          <span className={`auth-mode ${configured ? 'auth-mode--live' : previewMode ? 'auth-mode--preview' : 'auth-mode--locked'}`}>{configured ? 'Secure recovery connected' : previewMode ? 'Development preview · no email sent' : 'Account services locked'}</span>
+          {!authReady && <div className="auth-error" role="alert">{configurationError}</div>}
           <form onSubmit={handleResetRequest}>
-            <label>Email address<input type="email" required autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" /></label>
+            <label>Email address<input type="email" required disabled={!authReady} autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" /></label>
             {error && <div className="auth-error" role="alert">{error}</div>}
-            <button className="button button--gold button--full" type="submit" disabled={busy}>{busy ? 'Sending secure link…' : 'Send recovery link'} <ArrowRight size={18} /></button>
+            <button className="button button--gold button--full" type="submit" disabled={busy || !authReady}>{busy ? 'Sending secure link…' : 'Send recovery link'} <ArrowRight size={18} /></button>
           </form>
           <small className="auth-create">Remembered your password? <Link to="/sign-in">Sign in</Link></small>
         </>}
@@ -1271,13 +1460,16 @@ function ResetPasswordPage() {
   const [busy, setBusy] = useState(false)
   const [complete, setComplete] = useState(false)
   const [error, setError] = useState('')
-  const { configured, loading, isPasswordRecovery, updatePassword } = useAuth()
+  const { configured, previewMode, configurationError, loading, isPasswordRecovery, updatePassword } = useAuth()
+  const authReady = configured || previewMode
   const redirectError = new URLSearchParams(location.hash.replace(/^#/, '')).get('error_description')
 
   const handlePasswordUpdate = async (event) => {
     event.preventDefault()
     setError('')
-    if (password.length < 8) { setError('Use at least 8 characters for your new password.'); return }
+    if (!authReady) { setError(configurationError); return }
+    const passwordIssue = newPasswordIssue(password)
+    if (passwordIssue) { setError(passwordIssue); return }
     if (password !== confirmation) { setError('The passwords do not match.'); return }
     setBusy(true)
     try {
@@ -1300,13 +1492,14 @@ function ResetPasswordPage() {
       <div className="auth-page__brand"><MalawiMark /><Link to="/"><ArrowLeft size={17} />Back to Malawi</Link></div>
       <div className="auth-card" data-reveal="hero">
         {complete ? <div className="auth-success"><span><Check size={27} /></span><Eyebrow>Password updated</Eyebrow><h1>You are<br /><em>secure.</em></h1><p>Your new password is active. You can now sign in and continue to the editorial studio.</p><Link to="/sign-in?next=/admin" className="button button--gold">Sign in to the studio <ArrowRight size={18} /></Link></div> : invalidRecovery ? <div className="auth-success"><span><X size={27} /></span><Eyebrow>Recovery link unavailable</Eyebrow><h1>Request a<br /><em>fresh link.</em></h1><p>{redirectError ? decodeURIComponent(redirectError.replace(/\+/g, ' ')) : 'This recovery link has expired, has already been used, or was opened without a valid recovery session.'}</p><Link to="/forgot-password" className="button button--gold">Send a new recovery link <ArrowRight size={18} /></Link></div> : <>
-          <Eyebrow>Choose a new password</Eyebrow><h1>Secure your<br /><em>account.</em></h1><p>Create a password with at least eight characters. Use something memorable that you do not reuse elsewhere.</p>
-          <span className={`auth-mode ${configured ? 'auth-mode--live' : ''}`}>{loading ? 'Validating secure link…' : configured ? 'Recovery session verified' : 'Preview mode · backend keys pending'}</span>
+          <Eyebrow>Choose a new password</Eyebrow><h1>Secure your<br /><em>account.</em></h1><p>Use at least 12 characters with mixed case and a number. Choose something unique that you do not reuse elsewhere.</p>
+          <span className={`auth-mode ${configured ? 'auth-mode--live' : previewMode ? 'auth-mode--preview' : 'auth-mode--locked'}`}>{loading ? 'Validating secure link…' : configured ? 'Recovery session verified' : previewMode ? 'Development preview · no live account' : 'Account services locked'}</span>
+          {!authReady && <div className="auth-error" role="alert">{configurationError}</div>}
           <form onSubmit={handlePasswordUpdate}>
-            <label>New password<span className="password-field"><input type={showPassword ? 'text' : 'password'} required minLength="8" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="At least 8 characters" /><button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? 'Hide passwords' : 'Show passwords'}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></span></label>
-            <label>Confirm new password<input type={showPassword ? 'text' : 'password'} required minLength="8" autoComplete="new-password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="Repeat your new password" /></label>
+            <label>New password<span className="password-field"><input type={showPassword ? 'text' : 'password'} required disabled={!authReady} minLength="12" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="12+ characters, mixed case and a number" /><button type="button" disabled={!authReady} onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? 'Hide passwords' : 'Show passwords'}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></span></label>
+            <label>Confirm new password<input type={showPassword ? 'text' : 'password'} required disabled={!authReady} minLength="12" autoComplete="new-password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="Repeat your new password" /></label>
             {error && <div className="auth-error" role="alert">{error}</div>}
-            <button className="button button--gold button--full" type="submit" disabled={busy || loading}>{busy ? 'Updating password…' : 'Set new password'} <ArrowRight size={18} /></button>
+            <button className="button button--gold button--full" type="submit" disabled={busy || loading || !authReady}>{busy ? 'Updating password…' : 'Set new password'} <ArrowRight size={18} /></button>
           </form>
         </>}
       </div>

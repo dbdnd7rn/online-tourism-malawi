@@ -9,6 +9,9 @@ A responsive full-stack-ready React experience for discovering Malawi's six cult
 - Search and category filtering for heritage content and events
 - Interactive performance browser, podcast player, account registration and saved member collections
 - A protected Editorial Studio for content, events, podcasts, enquiries, submissions, subscribers, member roles and activity history
+- Governed Supabase Storage uploads for images, audio, video and documents with rights, licence and consent metadata
+- Draft, scheduled, published and archived editorial states, featured stories, immutable version history and safe restoration
+- Submission-to-draft conversion and privacy-conscious subscriber CSV export
 - Route aliases for the approved information architecture
 - Accurate Malawi outline treatment and real Malawi-focused photography
 - Keyboard-friendly controls, semantic landmarks and reduced-motion support
@@ -65,9 +68,11 @@ pnpm build
 The app uses Supabase for email/password authentication, magic links and published content. It remains fully usable with its curated local content when environment keys are absent.
 
 1. Create a Supabase project.
-2. Run the SQL files in `supabase/migrations` in timestamp order. The second migration completes member profiles and community services, the third seeds the production catalogue, and the fourth adds secure administration roles, editorial policies and the audit trail.
+2. Run the SQL files in `supabase/migrations` in timestamp order. Later migrations add the live media catalogue, database hardening, governed Storage buckets, editorial scheduling and version history.
 3. Copy `.env.example` to `.env.local` and add the project URL and public anonymous key.
 4. For GitHub Pages, add the same values as repository secrets named `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+
+Authentication preview mode is development-only and disabled by default. To test the local preview studio without Supabase, set `VITE_ENABLE_AUTH_PREVIEW=true` in `.env.local`. Production builds always fail closed when secure account services are missing or invalid.
 
 The database enables row-level security. Visitors can read published material and submit forms without gaining access to private records; signed-in members can only read and manage their own profiles, saved items and submissions.
 
@@ -86,6 +91,16 @@ where id = (
 After signing in, the owner can open `/admin` and assign `editor` or `admin` roles from **Members & roles**. Role changes are enforced by database policies and recorded in `admin_audit_log`.
 
 Only the Supabase publishable key belongs in `VITE_SUPABASE_ANON_KEY`. Never place a Supabase secret or service-role key in a Vite environment variable or browser bundle.
+
+## Security
+
+Run the complete local quality gate before proposing a change:
+
+```bash
+pnpm check
+```
+
+This scans tracked files for common credential patterns, runs ESLint and creates the production bundle. The repository also includes CodeQL, Dependabot, strict Vercel browser headers and a database hardening migration. Operational requirements and credential-rotation steps are documented in [`docs/production-security.md`](docs/production-security.md). Vulnerabilities should be reported privately using [`SECURITY.md`](SECURITY.md).
 
 ## Deployment
 

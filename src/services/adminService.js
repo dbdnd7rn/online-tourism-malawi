@@ -16,6 +16,7 @@ const fallbackKeyByResource = {
   museums: 'museums',
   performances: 'performances',
   events: 'events',
+  media: 'mediaItems',
   podcasts: 'podcasts',
   creatives: 'creatives',
 }
@@ -28,6 +29,9 @@ const buildPreviewContent = (key) => {
     id: item.id || `preview-${key}-${index + 1}`,
     slug: item.slug || slugify(item[definition.titleField]),
     published: item.published ?? true,
+    publication_status: item.publication_status || (item.published === false ? 'draft' : 'published'),
+    publish_at: item.publish_at ?? null,
+    featured: item.featured ?? false,
     verified: item.verified ?? false,
     sort_order: item.sort_order ?? index + 1,
     created_at: item.created_at || new Date(Date.now() - index * 86400000).toISOString(),
@@ -39,6 +43,7 @@ const previewDefaults = () => ({
   museums: buildPreviewContent('museums'),
   performances: buildPreviewContent('performances'),
   events: buildPreviewContent('events'),
+  media: buildPreviewContent('media'),
   podcasts: buildPreviewContent('podcasts'),
   creatives: buildPreviewContent('creatives'),
   contact: [
@@ -83,9 +88,23 @@ const getDefinition = (key) => adminResources[key] || workflowResources[key]
 
 const cleanPayload = (record) => Object.fromEntries(
   Object.entries(record).filter(([key, value]) => (
-    !['id', 'created_at', 'updated_at', 'actor_email'].includes(key) && value !== undefined
+    !key.startsWith('__')
+    && !['id', 'created_at', 'updated_at', 'updated_by', 'actor_email'].includes(key)
+    && value !== undefined
   )),
 )
+
+const normalizePublication = (record) => {
+  if (!adminResources[record.__resourceKey]) return record
+  const publication_status = record.publication_status || (record.published === false ? 'draft' : 'published')
+  return {
+    ...record,
+    publication_status,
+    published: ['published', 'scheduled'].includes(publication_status),
+    publish_at: publication_status === 'scheduled' ? record.publish_at : null,
+    archived_at: publication_status === 'archived' ? (record.archived_at || new Date().toISOString()) : null,
+  }
+}
 
 export async function loadAdminResource(key) {
   const definition = getDefinition(key)
@@ -103,7 +122,8 @@ export async function loadAdminResource(key) {
 export async function saveAdminRecord(key, record) {
   const definition = getDefinition(key)
   if (!definition) throw new Error(`Unknown admin resource: ${key}`)
-  const payload = cleanPayload(record)
+  const normalized = normalizePublication({ ...record, __resourceKey: key })
+  const payload = cleanPayload(normalized)
 
   if (!supabase) {
     const store = readPreviewStore()
@@ -166,6 +186,7 @@ export async function loadAdminDashboard() {
         events: store.events.length,
         podcasts: store.podcasts.length,
         creatives: store.creatives.length,
+        media: store.media.length,
         inbox: store.contact.filter((item) => item.status === 'new').length,
         submissions: store.submissions.filter((item) => ['received', 'reviewing'].includes(item.status)).length,
         subscribers: store.subscribers.filter((item) => item.active).length,
@@ -184,6 +205,7 @@ export async function loadAdminDashboard() {
     events,
     podcasts,
     creatives,
+    media,
     inbox,
     submissions,
     subscribers,
@@ -198,6 +220,7 @@ export async function loadAdminDashboard() {
     exactCount('events'),
     exactCount('podcasts'),
     exactCount('creative_profiles'),
+    exactCount('media_items'),
     exactCount('contact_messages', (query) => query.eq('status', 'new')),
     exactCount('submissions', (query) => query.in('status', ['received', 'reviewing'])),
     exactCount('newsletter_subscribers', (query) => query.eq('active', true)),
@@ -211,7 +234,7 @@ export async function loadAdminDashboard() {
   if (resultWithError?.error) throw resultWithError.error
 
   return {
-    counts: { heritage, museums, performances, events, podcasts, creatives, inbox, submissions, subscribers, members },
+    counts: { heritage, museums, performances, events, podcasts, creatives, media, inbox, submissions, subscribers, members },
     recentMessages: recentMessagesResult.data ?? [],
     recentSubmissions: recentSubmissionsResult.data ?? [],
     recentActivity: recentActivityResult.data ?? [],
@@ -253,3 +276,65 @@ export async function loadAuditLog() {
   if (error) throw error
   return data ?? []
 }
+
+export async function loadContentVersions(key, recordId) {
+  const definition = adminResources[key]
+  if (!definition || !recordId) return []
+  if (!supabase) return []
+  const { data, error } = await supabase
+    .from('content_versions')
+    .select('*')
+    .eq('resource_type', definition.table)
+    .eq('record_id', recordId)
+    .order('created_at', { ascending: false })
+    .limit(25)
+  if (error) throw error
+  return data ?? []
+}
+
+export async function restoreContentVersion(key, version) {
+  if (!version?.snapshot?.id) throw new Error('This version cannot be restored.')
+  return saveAdminRecord(key, { ...version.snapshot, id: version.record_id })
+}
+
+export async function markSubmissionConverted(submissionId) {
+  if (!submissionId) return null
+  if (!supabase) {
+    const store = readPreviewStore()
+    store.submissions = store.submissions.map((item) => item.id === submissionId ? { ...item, status: 'accepted', updated_at: new Date().toISOString() } : item)
+    writePreviewStore(store)
+    return store.submissions.find((item) => item.id === submissionId)
+  }
+  const { data, error } = await supabase.from('submissions').update({ status: 'accepted' }).eq('id', submissionId).select('*').single()
+  if (error) throw error
+  return data
+}
+
+export const submissionToDraft = (submission) => {
+  const base = {
+    __submissionId: submission.id,
+    publication_status: 'draft',
+    published: false,
+    title: submission.title,
+    slug: slugify(submission.title),
+    location: submission.location || '',
+    description: submission.description || '',
+    body: submission.description || '',
+    summary: submission.description || '',
+    sort_order: 0,
+  }
+  if (submission.submission_type === 'event') {
+    return { resource: 'events', record: { ...base, type: 'Community event', place: submission.location || '', day: '', month: '', image: '' } }
+  }
+  if (submission.submission_type === 'profile') {
+    return { resource: 'creatives', record: { ...base, name: submission.title, segment: '', focus: '', image: '', website: submission.website || '' } }
+  }
+  return { resource: 'heritage', record: { ...base, type: '', tag: 'Community submission', image: '', website: submission.website || '' } }
+}
+
+const csvCell = (value) => `"${String(value ?? '').replaceAll('"', '""')}"`
+
+export const buildSubscriberCsv = (subscribers) => [
+  ['email', 'source', 'active', 'subscribed_at'],
+  ...subscribers.map((item) => [item.email, item.source, item.active, item.created_at]),
+].map((row) => row.map(csvCell).join(',')).join('\r\n')

@@ -1,6 +1,11 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { hasSupabaseConfig, supabase } from '../lib/supabase'
+import {
+  authPreviewEnabled,
+  hasSupabaseConfig,
+  supabase,
+  supabaseConfigError,
+} from '../lib/supabase'
 
 const AuthContext = createContext(null)
 const previewUserKey = 'otm:preview-user'
@@ -18,7 +23,7 @@ const authRedirect = (path) => new URL(
 ).toString()
 
 const readPreviewUser = () => {
-  if (hasSupabaseConfig || typeof window === 'undefined') return null
+  if (!authPreviewEnabled || typeof window === 'undefined') return null
   try { return JSON.parse(window.localStorage.getItem(previewUserKey)) }
   catch { return null }
 }
@@ -34,6 +39,10 @@ const previewProfileFor = (user) => user ? {
   role: 'admin',
   home_region: 'Malawi',
 } : null
+
+const requireAccountService = () => {
+  if (!authPreviewEnabled) throw new Error(supabaseConfigError)
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(readPreviewUser)
@@ -51,6 +60,7 @@ export function AuthProvider({ children }) {
       return null
     }
     if (!supabase) {
+      requireAccountService()
       const previewProfile = previewProfileFor(currentUser)
       setProfile(previewProfile)
       setProfileError('')
@@ -107,12 +117,15 @@ export function AuthProvider({ children }) {
     profileLoading,
     profileError,
     configured: hasSupabaseConfig,
+    previewMode: authPreviewEnabled,
+    configurationError: hasSupabaseConfig || authPreviewEnabled ? '' : supabaseConfigError,
     isAdmin: profile?.role === 'admin',
     canManageContent: ['admin', 'editor'].includes(profile?.role),
     isPasswordRecovery,
     refreshProfile,
     async signIn(email, password) {
       if (!supabase) {
+        requireAccountService()
         const previewUser = { email, id: 'preview-user', user_metadata: { display_name: email.split('@')[0] } }
         persistPreviewUser(previewUser)
         setUser(previewUser)
@@ -126,6 +139,7 @@ export function AuthProvider({ children }) {
     },
     async signUp(email, password, displayName) {
       if (!supabase) {
+        requireAccountService()
         const previewUser = { email, id: 'preview-user', user_metadata: { display_name: displayName } }
         persistPreviewUser(previewUser)
         setUser(previewUser)
@@ -146,6 +160,7 @@ export function AuthProvider({ children }) {
     },
     async sendMagicLink(email) {
       if (!supabase) {
+        requireAccountService()
         const previewUser = { email, id: 'preview-user', user_metadata: { display_name: email.split('@')[0] } }
         persistPreviewUser(previewUser)
         setUser(previewUser)
@@ -160,7 +175,10 @@ export function AuthProvider({ children }) {
       return data
     },
     async requestPasswordReset(email) {
-      if (!supabase) return { preview: true }
+      if (!supabase) {
+        requireAccountService()
+        return { preview: true }
+      }
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: authRedirect('/reset-password'),
       })
@@ -169,6 +187,7 @@ export function AuthProvider({ children }) {
     },
     async updatePassword(password) {
       if (!supabase) {
+        requireAccountService()
         setIsPasswordRecovery(false)
         return { preview: true }
       }

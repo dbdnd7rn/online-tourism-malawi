@@ -1,0 +1,11 @@
+.account-pill { min-height: 40px; display: inline-flex; align-items: center; gap: 8px; padding: 0 13px 0 7px; border: 1px solid rgba(201, 154, 69, .38); cursor: pointer; color: var(--ivory); background: transparent; font-size: 10px; }
+.account-pill span { width: 27px; height: 27px; display: grid; place-items: center; border-radius: 50%; color: var(--ink); background: var(--gold); font-weight: 700; }
+.button:disabled { cursor: wait; opacity: .58; transform: none; }
+.auth-mode { display: inline-flex; margin: -14px 0 22px; padding: 6px 9px; border: 1px solid rgba(201, 154, 69, .3); color: #9f9b93; font-size: 8px; letter-spacing: .12em; text-transform: uppercase; }
+.auth-mode--live { border-color: rgba(105, 190, 133, .5); color: #9ad0aa; }
+.auth-mode--preview { border-color: rgba(224, 185, 102, .5); color: var(--gold-bright); }
+.auth-mode--locked { border-color: rgba(201, 104, 82, .55); color: #e2aaa0; }
+.auth-error { padding: 10px 12px; border-left: 2px solid #c96852; color: #e2aaa0; background: rgba(201, 104, 82, .08); font-size: 10px; letter-spacing: normal; text-transform: none; }
+.auth-page input:disabled, .auth-page button:disabled { cursor: not-allowed; }
+.auth-page input:disabled { opacity: .55; }
+.form-honeypot { position: absolute !important; left: -10000px !important; width: 1px !important; height: 1px !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important; }
