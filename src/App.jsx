@@ -55,31 +55,6 @@ const navigation = [
   { label: 'About', to: '/about-us' },
 ]
 
-const siteOrigin = 'https://online-tourism-malawi.vercel.app'
-const defaultSeo = {
-  title: 'Online Tourism Malawi',
-  description: 'Discover the art, heritage, museums, landscapes and living traditions of Malawi.',
-}
-const routeSeo = [
-  ['/', 'Online Tourism Malawi', defaultSeo.description],
-  ['/segments', 'Creative Sectors | Online Tourism Malawi', 'Explore Malawi through heritage, performance, visual arts, books, media, design and creative industries.'],
-  ['/explore', 'Cultural & Natural Heritage | Online Tourism Malawi', 'Explore Malawi heritage places, museums, cultural landscapes and natural wonders in one living collection.'],
-  ['/museums', 'Museums & Collections | Online Tourism Malawi', 'Meet the museums, archives and cultural centres preserving Malawi history, objects and public memory.'],
-  ['/performance', 'Performance & Celebration | Online Tourism Malawi', 'Discover Malawian performing arts, music, festivals, fairs and celebrations rooted in community life.'],
-  ['/visual-arts-crafts', 'Visual Arts & Crafts | Online Tourism Malawi', 'Find Malawian fine arts, photography, craft traditions and creative makers across the country.'],
-  ['/books-press', 'Books & Press | Online Tourism Malawi', 'Explore Malawi books, newspapers, magazines, libraries and literary gatherings.'],
-  ['/media-library', 'Media Library & Podcasts | Online Tourism Malawi', 'Watch, listen and explore Malawi through video, audio, podcasting, archives and interactive media.'],
-  ['/design-creative', 'Design & Creative | Online Tourism Malawi', 'Discover Malawi fashion, architecture, graphic design, interiors and landscape design.'],
-  ['/events', 'Events | Online Tourism Malawi', 'Find festivals, performances, exhibitions and cultural gatherings across Malawi.'],
-  ['/directory', 'Creative Directory | Online Tourism Malawi', 'Browse Malawian makers, studios, organisations and cultural enterprises across the creative sectors.'],
-  ['/plan-your-visit', 'Plan Your Visit | Online Tourism Malawi', 'Build a thoughtful Malawi route around heritage places, museums, events, media and local context.'],
-  ['/about-us', 'About Us | Online Tourism Malawi', 'Learn how Online Tourism Malawi connects culture, heritage, responsible travel and digital access.'],
-  ['/contact', 'Contact | Online Tourism Malawi', 'Contact the Online Tourism Malawi team about partnerships, collections, events and platform questions.'],
-  ['/contribute', 'Contribute | Online Tourism Malawi', 'Submit a story, event, correction or creative profile for editorial review.'],
-  ['/account', 'My Collection | Online Tourism Malawi', 'View and manage saved Malawi stories, places, events and media.'],
-  ['/sign-in', 'Sign In | Online Tourism Malawi', 'Sign in to save discoveries and access the Online Tourism Malawi editorial studio.'],
-]
-
 const heritageMapStops = [
   { id: 'north', name: 'Karonga & Nyika', region: 'Northern Region', query: 'Northern Region', copy: 'Fossil landscapes, high plateaux, living collections and the Nyika–Vwaza conservation system.' },
   { id: 'centre', name: 'Dedza & the Lake', region: 'Central Region', query: 'Central Region', copy: 'Rock art, cultural centres and lakeshore stories connect place, memory and creative practice.' },
@@ -248,6 +223,23 @@ function Header() {
   const { user, canManageContent } = useAuth()
   const closeOverlays = () => { setMenuOpen(false); setSearchOpen(false) }
 
+  useEffect(() => {
+    if (!menuOpen && !searchOpen) return undefined
+    const previousOverflow = document.body.style.overflow
+    if (menuOpen) document.body.style.overflow = 'hidden'
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') {
+        setMenuOpen(false)
+        setSearchOpen(false)
+      }
+    }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [menuOpen, searchOpen])
+
   const submitSearch = (event) => {
     event.preventDefault()
     const query = new FormData(event.currentTarget).get('search')?.trim()
@@ -268,7 +260,7 @@ function Header() {
             ))}
           </nav>
           <div className="header-actions">
-            <button className="icon-button search-trigger" onClick={() => setSearchOpen((value) => !value)} aria-label="Search" aria-expanded={searchOpen}>
+            <button className="icon-button search-trigger" onClick={() => setSearchOpen((value) => !value)} aria-label={searchOpen ? 'Close search' : 'Open search'} aria-expanded={searchOpen} aria-controls="site-search">
               {searchOpen ? <X size={19} /> : <Search size={19} />}
             </button>
             {canManageContent && <Link className="admin-shortcut" to="/admin" onClick={closeOverlays}><Sparkles size={15} /><span>Studio</span></Link>}
@@ -277,13 +269,13 @@ function Header() {
                 <span>{user.email?.slice(0, 1).toUpperCase()}</span>{user.email?.split('@')[0]}
               </Link>
             ) : <Link className="button button--gold button--small sign-in-link" to="/sign-in" onClick={closeOverlays}>Sign in</Link>}
-            <button className="icon-button menu-trigger" onClick={() => setMenuOpen((value) => !value)} aria-label="Open menu" aria-expanded={menuOpen}>
+            <button className="icon-button menu-trigger" onClick={() => setMenuOpen((value) => !value)} aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen} aria-controls="mobile-navigation">
               {menuOpen ? <X size={21} /> : <Menu size={21} />}
             </button>
           </div>
         </div>
         {searchOpen && (
-          <div className="search-drawer">
+          <div className="search-drawer" id="site-search">
             <form className="shell search-drawer__form" onSubmit={submitSearch}>
               <Search size={22} />
               <input name="search" autoFocus aria-label="Search the Malawi collection" placeholder="Search museums, places, traditions and stories" />
@@ -292,7 +284,7 @@ function Header() {
           </div>
         )}
       </header>
-      <div className={`mobile-panel ${menuOpen ? 'mobile-panel--open' : ''}`} aria-hidden={!menuOpen}>
+      <div className={`mobile-panel ${menuOpen ? 'mobile-panel--open' : ''}`} id="mobile-navigation" role="dialog" aria-modal="true" aria-label="Site navigation" aria-hidden={!menuOpen} inert={!menuOpen ? true : undefined}>
         <div className="mobile-panel__top">
           <MalawiMark compact />
           <button className="icon-button" onClick={() => setMenuOpen(false)} aria-label="Close menu"><X size={21} /></button>
@@ -341,7 +333,6 @@ function Footer() {
 function Layout({ children }) {
   const location = useLocation()
   const scrollProgress = useScrollProgress()
-  useRouteSeo(location.pathname)
   useRevealMotion(location.pathname)
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }) }, [location.pathname])
   return (
@@ -349,7 +340,7 @@ function Layout({ children }) {
       <a className="skip-link" href="#main-content">Skip to content</a>
       <div className="scroll-progress" style={{ transform: `scaleX(${scrollProgress})` }} aria-hidden="true" />
       <Header />
-      <main id="main-content" className="route-motion" key={location.pathname}>{children}</main>
+      <main id="main-content" className="route-motion" key={location.pathname} tabIndex={-1}>{children}</main>
       <Footer />
     </>
   )
@@ -368,46 +359,14 @@ function SectionHeading({ eyebrow, title, copy, action, inverse = false }) {
   )
 }
 
-function Picture({ src, alt, className = '' }) {
-  return <div className={`picture ${className}`}><img src={src} alt={alt} loading="lazy" onError={imageFallback} /></div>
-}
-
-function setDocumentMeta(selector, attribute, value) {
-  let element = document.head.querySelector(selector)
-  if (!element) {
-    element = document.createElement(selector.startsWith('link') ? 'link' : 'meta')
-    const nameMatch = selector.match(/\[(name|property|rel)="([^"]+)"\]/)
-    if (nameMatch) element.setAttribute(nameMatch[1], nameMatch[2])
-    document.head.appendChild(element)
-  }
-  element.setAttribute(attribute, value)
-}
-
-function useRouteSeo(pathname) {
-  useEffect(() => {
-    const detailRoute = pathname.startsWith('/heritage/') || pathname.startsWith('/museums/') || pathname.startsWith('/events/') || pathname.startsWith('/directory/')
-    const matched = routeSeo.find(([route]) => route === pathname)
-    const title = detailRoute ? 'Malawi Discovery | Online Tourism Malawi' : matched?.[1] || defaultSeo.title
-    const description = detailRoute
-      ? 'Explore this Malawi story with context, practical details and related discoveries.'
-      : matched?.[2] || defaultSeo.description
-    const canonical = `${siteOrigin}${pathname === '/' ? '/' : pathname}`
-
-    document.title = title
-    setDocumentMeta('meta[name="description"]', 'content', description)
-    setDocumentMeta('meta[property="og:title"]', 'content', title)
-    setDocumentMeta('meta[property="og:description"]', 'content', description)
-    setDocumentMeta('meta[property="og:url"]', 'content', canonical)
-    setDocumentMeta('meta[name="twitter:title"]', 'content', title)
-    setDocumentMeta('meta[name="twitter:description"]', 'content', description)
-    setDocumentMeta('link[rel="canonical"]', 'href', canonical)
-  }, [pathname])
+function Picture({ src, alt, className = '', priority = false }) {
+  return <div className={`picture ${className}`}><img src={src} alt={alt} loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : 'auto'} decoding="async" onError={imageFallback} /></div>
 }
 
 function PageHero({ eyebrow, title, copy, image, imageAlt, children, tall = false }) {
   return (
     <section className={`page-hero ${tall ? 'page-hero--tall' : ''}`}>
-      <Picture src={image} alt={imageAlt} className="page-hero__image" />
+      <Picture src={image} alt={imageAlt} className="page-hero__image" priority />
       <div className="page-hero__shade" />
       <MotionLayer variant="page" />
       <div className="shell page-hero__content" data-reveal="hero">
@@ -465,7 +424,7 @@ function HomePage() {
   return (
     <>
       <section className="home-hero">
-        <Picture src={images.gule} alt="A Gule Wamkulu performance in Malawi" className="home-hero__image" />
+        <Picture src={images.gule} alt="A Gule Wamkulu performance in Malawi" className="home-hero__image" priority />
         <div className="home-hero__veil" />
         <MotionLayer variant="home" />
         <div className="shell shell--wide home-hero__content">
@@ -1278,12 +1237,12 @@ function AccountPage() {
 
 function LegalPage({ type }) {
   const pages = {
-    privacy: ['Privacy', 'How information is handled', [['Information you provide', 'We receive information when you create an account, subscribe, contact the team, save an item or submit a contribution.'], ['How it is used', 'Information supports the service you requested, editorial review, platform security and responsible product improvement.'], ['Your choices', 'You may request access, correction or deletion through the contact page. Production retention periods should be confirmed with the operating organisation.']]],
+    privacy: ['Privacy', 'How information is handled', [['Information you provide', 'We receive information when you create an account, subscribe, contact the team, save an item or submit a contribution.'], ['Service measurement', 'On the Vercel-hosted website, privacy-conscious Web Analytics and Speed Insights measure page use and performance. Search parameters and URL fragments are removed before these measurements are sent.'], ['How it is used', 'Information supports the service you requested, editorial review, platform security and responsible product improvement.'], ['Your choices', 'You may request access, correction or deletion through the contact page. Production retention periods should be confirmed with the operating organisation.']]],
     terms: ['Terms of Use', 'A respectful shared space', [['Editorial information', 'Travel details and dates may change. Confirm important information with the relevant institution, organiser or official authority.'], ['Cultural responsibility', 'Do not reproduce sensitive knowledge or imagery outside the context and permissions described by custodians.'], ['Submissions', 'You must have the right and permission to share material you submit. Acceptance does not guarantee publication.']]],
     accessibility: ['Accessibility', 'A doorway designed for everyone', [['Our approach', 'The interface uses semantic structure, keyboard-friendly controls, visible focus, responsive layouts and reduced-motion support.'], ['Known limitations', 'External media, evolving partner content and some long-form material may require further descriptions or transcripts.'], ['Help us improve', 'Tell us about an access barrier through the contact page and include the page, device and assistance you need.']]],
   }
   const [title, heading, sections] = pages[type]
-  return <><section className="legal-hero"><MotionLayer variant="page" /><div className="shell" data-reveal="hero"><Eyebrow>Online Tourism Malawi</Eyebrow><h1>{title}</h1><p>Launch edition · Updated 9 August 2026</p></div></section><section className="section section--paper legal-page"><div className="shell legal-page__grid"><aside><BookOpen size={28} /><h2>{heading}</h2><Link className="text-link" to="/contact">Ask a question <ArrowUpRight size={17} /></Link></aside><article>{sections.map(([sectionTitle, copy], index) => <section key={sectionTitle} data-reveal="up"><span>0{index + 1}</span><h2>{sectionTitle}</h2><p>{copy}</p></section>)}</article></div></section></>
+  return <><section className="legal-hero"><MotionLayer variant="page" /><div className="shell" data-reveal="hero"><Eyebrow>Online Tourism Malawi</Eyebrow><h1>{title}</h1><p>Launch edition · Updated 13 August 2026</p></div></section><section className="section section--paper legal-page"><div className="shell legal-page__grid"><aside><BookOpen size={28} /><h2>{heading}</h2><Link className="text-link" to="/contact">Ask a question <ArrowUpRight size={17} /></Link></aside><article>{sections.map(([sectionTitle, copy], index) => <section key={sectionTitle} data-reveal="up"><span>0{index + 1}</span><h2>{sectionTitle}</h2><p>{copy}</p></section>)}</article></div></section></>
 }
 
 function MediaPage() {

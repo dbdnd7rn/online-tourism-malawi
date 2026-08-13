@@ -15,6 +15,9 @@ A responsive full-stack-ready React experience for discovering Malawi's six cult
 - Route aliases for the approved information architecture
 - Accurate Malawi outline treatment and real Malawi-focused photography
 - Keyboard-friendly controls, semantic landmarks and reduced-motion support
+- Route announcements, focus-managed navigation, offline recovery messaging and a safe application error screen
+- Lazy-loaded public experiences with automated JavaScript and stylesheet performance budgets
+- Privacy-conscious Vercel Web Analytics, Core Web Vitals and a scheduled production journey monitor
 - Supabase authentication, editorial content, creative profiles, saved items, newsletter, contact and submission services with resilient local fallbacks
 - Automated GitHub Pages deployment with SPA deep-link support
 
@@ -100,11 +103,13 @@ Run the complete local quality gate before proposing a change:
 pnpm check
 ```
 
-This scans tracked files for common credential patterns, runs ESLint and creates the production bundle. The repository also includes CodeQL, Dependabot, strict Vercel browser headers and a database hardening migration. Operational requirements and credential-rotation steps are documented in [`docs/production-security.md`](docs/production-security.md). Vulnerabilities should be reported privately using [`SECURITY.md`](SECURITY.md).
+This scans tracked files for common credential patterns, runs ESLint, creates the production bundle, enforces asset-size budgets and opens every major public route plus the sitemap, robots file and web-app manifest. The repository also includes CodeQL, Dependabot, strict Vercel browser headers and a database hardening migration. Operational requirements and credential-rotation steps are documented in [`docs/production-security.md`](docs/production-security.md). Vulnerabilities should be reported privately using [`SECURITY.md`](SECURITY.md).
 
 ## Deployment
 
 Every push to `main` runs `.github/workflows/deploy-pages.yml`, builds the production bundle and deploys it to GitHub Pages. The included `404.html` preserves direct links to React routes.
+
+Vercel builds automatically enable the Analytics and Speed Insights hooks; local and GitHub Pages builds omit them. Enable both products in the Vercel project dashboard before launch. The scheduled production monitor checks the canonical Vercel journey every six hours. Follow [`docs/launch-runbook.md`](docs/launch-runbook.md) for preview validation, production promotion, first-hour checks and rollback.
 
 ## Photography and map credits
 

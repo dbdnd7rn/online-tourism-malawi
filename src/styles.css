@@ -31,6 +31,9 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 500; }
 h1 em, h2 em { color: var(--gold); font-weight: 500; }
 p { line-height: 1.75; }
 ::selection { background: var(--gold); color: var(--ink); }
+:where(a, button, input, select, textarea, [tabindex]):focus-visible { outline: 3px solid var(--gold-bright); outline-offset: 3px; }
+main[tabindex="-1"]:focus { outline: none; }
+.sr-only { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important; }
 
 .shell { width: min(1180px, calc(100% - 48px)); margin-inline: auto; }
 .shell--wide { width: min(1400px, calc(100% - 64px)); }
@@ -42,6 +45,23 @@ p { line-height: 1.75; }
 .skip-link:focus { transform: translateY(0); }
 .scroll-progress { position: fixed; z-index: 220; top: 0; left: 0; width: 100%; height: 3px; transform-origin: left center; background: linear-gradient(90deg, var(--gold-dark), var(--gold-bright), var(--ivory)); box-shadow: 0 0 24px rgba(224, 185, 102, .5); }
 .route-motion { animation: routeIn .72s var(--ease-out) both; }
+.network-status { position: fixed; z-index: 1000; top: 96px; left: 50%; width: min(620px, calc(100% - 32px)); padding: 12px 18px; transform: translateX(-50%); border: 1px solid rgba(224, 185, 102, .5); box-shadow: 0 16px 44px rgba(0, 0, 0, .35); text-align: center; color: var(--ivory); background: #121715; font-size: 11px; line-height: 1.5; }
+.network-status--offline { border-color: rgba(201, 104, 82, .68); }
+.network-status--restored { border-color: rgba(105, 190, 133, .62); }
+
+.route-loader { min-height: 100vh; display: grid; place-items: center; color: var(--ivory); background: var(--ink); }
+.route-loader > div { display: grid; justify-items: center; gap: 18px; }
+.route-loader span { width: 48px; height: 48px; border: 1px solid rgba(224, 185, 102, .24); border-top-color: var(--gold-bright); border-radius: 50%; animation: runtimeSpin .8s linear infinite; }
+.route-loader p { margin: 0; color: #b8b2a8; font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; }
+
+.fatal-state { min-height: 100vh; display: grid; place-items: center; padding: 48px 24px; color: var(--ivory); background: radial-gradient(circle at 75% 20%, rgba(201, 154, 69, .16), transparent 34%), var(--ink); }
+.fatal-state > div { width: min(720px, 100%); padding: clamp(34px, 7vw, 74px); border: 1px solid var(--line); background: rgba(16, 20, 19, .82); }
+.fatal-state small { color: var(--gold); font-family: var(--sans); font-size: 9px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+.fatal-state h1 { margin: 18px 0; font-size: clamp(46px, 7vw, 78px); line-height: .98; }
+.fatal-state p { max-width: 560px; color: #aca79e; }
+.fatal-state > div > div { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.fatal-state button, .fatal-state a { min-height: 46px; display: inline-flex; align-items: center; justify-content: center; padding: 0 18px; border: 1px solid var(--gold); cursor: pointer; color: var(--ink); background: var(--gold); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.fatal-state a { color: var(--ivory); background: transparent; }
 
 [data-reveal] { --reveal-y: 30px; opacity: 0; transform: translate3d(0, var(--reveal-y), 0); transition: opacity .72s var(--ease-out), transform .72s var(--ease-out); transition-delay: var(--reveal-delay, 0ms); will-change: opacity, transform; }
 [data-reveal="hero"] { --reveal-y: 42px; }
@@ -68,6 +88,10 @@ p { line-height: 1.75; }
 @keyframes routeIn {
   from { opacity: .92; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes runtimeSpin {
+  to { transform: rotate(360deg); }
 }
 
 @keyframes ringBreath {
