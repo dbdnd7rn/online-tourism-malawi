@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
+import { Link, Navigate, useLocation } from 'react-router-dom'
 
 const App = lazy(() => import('./App'))
 const MediaPage = lazy(() => import('./pages/MediaPage'))
@@ -16,11 +16,12 @@ export default function RootApp() {
 
   return (
     <Suspense fallback={<RouteLoading />}>
-      {location.pathname === '/media-library'
-        ? <MediaPage />
-        : location.pathname === '/premium'
-          ? <PremiumPage />
-          : <App />}
+      {location.pathname === '/media-library' ? (
+        <>
+          <MediaPage />
+          <Link className="premium-floating-link" to="/premium">Premium</Link>
+        </>
+      ) : location.pathname === '/premium' ? <PremiumPage /> : <App />}
     </Suspense>
   )
 }
