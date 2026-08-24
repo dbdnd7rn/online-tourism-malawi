@@ -9,6 +9,7 @@ import { SubscriptionProvider } from './context/SubscriptionContext'
 import './styles.css'
 import './production.css'
 import './media.css'
+import './premium.css'
 
 const Observability = import.meta.env.VITE_VERCEL_OBSERVABILITY
   ? lazy(() => import('./components/Observability'))
