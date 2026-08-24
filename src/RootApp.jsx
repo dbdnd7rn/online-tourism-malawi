@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 
 const App = lazy(() => import('./App'))
 const MediaPage = lazy(() => import('./pages/MediaPage'))
+const PremiumPage = lazy(() => import('./pages/PremiumPage'))
 
 function RouteLoading() {
   return <main className="route-loader" aria-busy="true" aria-live="polite"><div><span /><p>Opening Malawi&hellip;</p></div></main>
@@ -15,7 +16,11 @@ export default function RootApp() {
 
   return (
     <Suspense fallback={<RouteLoading />}>
-      {location.pathname === '/media-library' ? <MediaPage /> : <App />}
+      {location.pathname === '/media-library'
+        ? <MediaPage />
+        : location.pathname === '/premium'
+          ? <PremiumPage />
+          : <App />}
     </Suspense>
   )
 }
