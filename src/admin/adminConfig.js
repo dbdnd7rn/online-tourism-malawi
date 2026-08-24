@@ -20,6 +20,8 @@ export const publicationStates = [
   { value: 'archived', label: 'Archived' },
 ]
 
+export const accessLevels = ['free', 'premium']
+
 export const adminResources = {
   heritage: {
     table: 'heritage_items',
@@ -150,6 +152,7 @@ export const adminResources = {
       { key: 'title', label: 'Title' },
       { key: 'category', label: 'Category' },
       { key: 'length', label: 'Length' },
+      { key: 'access_level', label: 'Access' },
     ],
     fields: [
       { key: 'title', label: 'Episode title', required: true, wide: true },
@@ -158,6 +161,7 @@ export const adminResources = {
       { key: 'category', label: 'Category', required: true },
       { key: 'guest', label: 'Guest or episode line', required: true, wide: true },
       { key: 'length', label: 'Duration', required: true },
+      { key: 'access_level', label: 'Access', type: 'select', options: accessLevels, defaultValue: 'free', required: true },
       { key: 'image', label: 'Cover image', type: 'asset', assetKind: 'image', required: true, wide: true },
       { key: 'audio_url', label: 'Episode audio', type: 'asset', assetKind: 'audio', wide: true },
       { key: 'description', label: 'Episode description', type: 'textarea', rows: 5, wide: true },
@@ -209,6 +213,7 @@ export const adminResources = {
       { key: 'media_type', label: 'Format' },
       { key: 'category', label: 'Collection' },
       { key: 'location', label: 'Location' },
+      { key: 'access_level', label: 'Access' },
     ],
     fields: [
       { key: 'title', label: 'Title', required: true, wide: true },
@@ -217,6 +222,7 @@ export const adminResources = {
       { key: 'category', label: 'Collection or category', required: true },
       { key: 'location', label: 'Location' },
       { key: 'duration', label: 'Duration' },
+      { key: 'access_level', label: 'Access', type: 'select', options: accessLevels, defaultValue: 'free', required: true },
       { key: 'image', label: 'Cover image', type: 'asset', assetKind: 'image', required: true, wide: true },
       { key: 'media_url', label: 'Hosted media file', type: 'asset', assetKinds: ['audio', 'video'], wide: true },
       { key: 'embed_url', label: 'External embed URL', type: 'url', wide: true },
