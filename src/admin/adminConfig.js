@@ -20,7 +20,7 @@ export const publicationStates = [
   { value: 'archived', label: 'Archived' },
 ]
 
-const accessField = { key: 'access_level', label: 'Access', type: 'select', options: ['free', 'premium'], defaultValue: 'free' }
+export const accessLevels = ['free', 'premium']
 
 export const adminResources = {
   heritage: {
@@ -50,7 +50,6 @@ export const adminResources = {
       { key: 'body', label: 'Full story', type: 'textarea', rows: 7, wide: true },
       { key: 'website', label: 'Official website', type: 'url', wide: true },
       { key: 'sort_order', label: 'Display order', type: 'number', defaultValue: 0 },
-      accessField,
     ],
   },
   museums: {
@@ -78,7 +77,6 @@ export const adminResources = {
       { key: 'body', label: 'Full visitor story', type: 'textarea', rows: 7, wide: true },
       { key: 'website', label: 'Official website', type: 'url', wide: true },
       { key: 'sort_order', label: 'Display order', type: 'number', defaultValue: 0 },
-      accessField,
     ],
   },
   performances: {
@@ -105,7 +103,6 @@ export const adminResources = {
       { key: 'description', label: 'Short description', type: 'textarea', rows: 3, required: true, wide: true },
       { key: 'body', label: 'Full story', type: 'textarea', rows: 7, wide: true },
       { key: 'sort_order', label: 'Display order', type: 'number', defaultValue: 0 },
-      accessField,
     ],
   },
   events: {
@@ -138,7 +135,6 @@ export const adminResources = {
       { key: 'body', label: 'Full event description', type: 'textarea', rows: 7, wide: true },
       { key: 'booking_url', label: 'Booking or information URL', type: 'url', wide: true },
       { key: 'sort_order', label: 'Display order', type: 'number', defaultValue: 0 },
-      accessField,
     ],
   },
   podcasts: {
@@ -156,6 +152,7 @@ export const adminResources = {
       { key: 'title', label: 'Title' },
       { key: 'category', label: 'Category' },
       { key: 'length', label: 'Length' },
+      { key: 'access_level', label: 'Access' },
     ],
     fields: [
       { key: 'title', label: 'Episode title', required: true, wide: true },
@@ -164,11 +161,11 @@ export const adminResources = {
       { key: 'category', label: 'Category', required: true },
       { key: 'guest', label: 'Guest or episode line', required: true, wide: true },
       { key: 'length', label: 'Duration', required: true },
+      { key: 'access_level', label: 'Access', type: 'select', options: accessLevels, defaultValue: 'free', required: true },
       { key: 'image', label: 'Cover image', type: 'asset', assetKind: 'image', required: true, wide: true },
       { key: 'audio_url', label: 'Episode audio', type: 'asset', assetKind: 'audio', wide: true },
       { key: 'description', label: 'Episode description', type: 'textarea', rows: 5, wide: true },
       { key: 'sort_order', label: 'Display order', type: 'number', defaultValue: 0 },
-      accessField,
     ],
   },
   creatives: {
@@ -199,7 +196,6 @@ export const adminResources = {
       { key: 'email', label: 'Public email', type: 'email' },
       { key: 'sort_order', label: 'Display order', type: 'number', defaultValue: 0 },
       { key: 'verified', label: 'Verified profile', type: 'boolean', defaultValue: false },
-      accessField,
     ],
   },
   media: {
@@ -217,6 +213,7 @@ export const adminResources = {
       { key: 'media_type', label: 'Format' },
       { key: 'category', label: 'Collection' },
       { key: 'location', label: 'Location' },
+      { key: 'access_level', label: 'Access' },
     ],
     fields: [
       { key: 'title', label: 'Title', required: true, wide: true },
@@ -225,6 +222,7 @@ export const adminResources = {
       { key: 'category', label: 'Collection or category', required: true },
       { key: 'location', label: 'Location' },
       { key: 'duration', label: 'Duration' },
+      { key: 'access_level', label: 'Access', type: 'select', options: accessLevels, defaultValue: 'free', required: true },
       { key: 'image', label: 'Cover image', type: 'asset', assetKind: 'image', required: true, wide: true },
       { key: 'media_url', label: 'Hosted media file', type: 'asset', assetKinds: ['audio', 'video'], wide: true },
       { key: 'embed_url', label: 'External embed URL', type: 'url', wide: true },
@@ -232,7 +230,6 @@ export const adminResources = {
       { key: 'source_url', label: 'Source page', type: 'url', required: true, wide: true },
       { key: 'description', label: 'Description', type: 'textarea', rows: 6, required: true, wide: true },
       { key: 'sort_order', label: 'Display order', type: 'number', defaultValue: 0 },
-      accessField,
     ],
   },
 }
