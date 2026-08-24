@@ -83,10 +83,10 @@ export default function PremiumPage() {
 
             <div className="premium-currency" role="group" aria-label="Choose payment currency">
               <button type="button" className={currency === 'USD' ? 'active' : ''} onClick={() => setCurrency('USD')}>
-                <span>International</span><strong>USD</strong>
+                <span>International payment</span><strong>USD</strong>
               </button>
               <button type="button" className={currency === 'MWK' ? 'active' : ''} onClick={() => setCurrency('MWK')}>
-                <span>Malawi</span><strong>MWK</strong>
+                <span>Malawi payment</span><strong>MWK</strong>
               </button>
             </div>
 
@@ -100,13 +100,13 @@ export default function PremiumPage() {
 
             {user ? (
               <button className="button button--gold premium-checkout" type="button" onClick={startCheckout} disabled={!plan || loading || submitting}>
-                {submitting ? 'Opening PayChangu…' : <>Continue to secure checkout <ExternalLink size={17} /></>}
+                {submitting ? 'Opening PayChangu…' : <>Continue to PayChangu <ExternalLink size={17} /></>}
               </button>
             ) : (
               <Link className="button button--gold premium-checkout" to="/sign-in">Sign in to continue</Link>
             )}
 
-            <small className="premium-provider-note">Payment is completed securely on PayChangu Hosted Checkout. The website never handles card details.</small>
+            <small className="premium-provider-note">You choose MWK or USD here, then complete payment securely on PayChangu Hosted Checkout. Online Tourism never handles card details.</small>
           </section>
         )}
       </section>
