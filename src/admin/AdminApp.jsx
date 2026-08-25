@@ -63,6 +63,7 @@ import {
   updateWorkflowState,
 } from '../services/adminService'
 import { adminResources, adminRoles, publicationStates, resourceEntries, workflowEntries, workflowResources } from './adminConfig'
+import { ADMIN_BASE_PATH } from './adminRoute'
 import MediaAssetField from './MediaAssetField'
 import './admin.css'
 
@@ -165,6 +166,12 @@ function AdminShell() {
   const [menuOpen, setMenuOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
+  const internalPathname = location.pathname === ADMIN_BASE_PATH
+    ? '/admin'
+    : location.pathname.startsWith(`${ADMIN_BASE_PATH}/`)
+      ? `/admin${location.pathname.slice(ADMIN_BASE_PATH.length)}`
+      : location.pathname
+  const internalLocation = { ...location, pathname: internalPathname }
 
   const navigationGroups = [
     {
@@ -198,7 +205,7 @@ function AdminShell() {
   ]
 
   const currentLabel = navigationGroups.flatMap((group) => group.links).find((link) => (
-    link.end ? location.pathname === link.to : location.pathname.startsWith(link.to)
+    link.end ? internalPathname === link.to : internalPathname.startsWith(link.to)
   ))?.label || 'Editorial Studio'
 
   return (
@@ -225,7 +232,7 @@ function AdminShell() {
           </div>
         </header>
         <main className="admin-main">
-          <Routes>
+          <Routes location={internalLocation}>
             <Route path="/admin" element={<AdminOverview />} />
             <Route path="/admin/media-assets" element={<Suspense fallback={<AdminLoading label="Opening media storage" />}><AdminMediaLibrary /></Suspense>} />
             <Route path="/admin/content/:resource" element={<AdminResourcePage />} />
