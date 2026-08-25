@@ -5,6 +5,7 @@ import {
   Camera,
   Check,
   Headphones,
+  LockKeyhole,
   Mail,
   MapPin,
   Menu,
@@ -19,6 +20,7 @@ import {
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useContent } from '../context/ContentContext'
+import { useSubscription } from '../context/SubscriptionContext'
 import { images } from '../data/content'
 
 const navigation = [
@@ -152,13 +154,30 @@ const mediaGroup = (item) => {
   return 'Watch'
 }
 
+const isPremiumItem = (item) => item?.access_level === 'premium'
+
+function PremiumGate({ compact = false }) {
+  return (
+    <div className={`media-premium-gate ${compact ? 'media-premium-gate--compact' : ''}`}>
+      <span className="media-premium-gate__icon"><LockKeyhole size={compact ? 20 : 28} /></span>
+      <div>
+        <strong>Premium membership required</strong>
+        <p>Unlock Premium films, audio and cultural collections for 30 days.</p>
+      </div>
+      <Link className="button button--gold button--small" to="/premium">View Premium</Link>
+    </div>
+  )
+}
+
 function MediaCard({ item, onOpen }) {
   const group = mediaGroup(item)
+  const premium = isPremiumItem(item)
   return (
-    <button className="media-live-card" type="button" onClick={() => onOpen(item)} aria-label={`Open ${item.title}`}>
+    <button className="media-live-card" type="button" onClick={() => onOpen(item)} aria-label={`Open ${item.title}${premium ? ' — Premium' : ''}`}>
       <div className="media-live-card__visual">
         <Picture src={item.image} alt={item.title} />
         <span className="media-live-card__type">{item.media_type}</span>
+        {premium && <span className="media-premium-badge"><LockKeyhole size={13} /> Premium</span>}
         <span className="media-live-card__play">{group === 'Listen' ? <Volume2 size={20} /> : <Play size={20} fill="currentColor" />}</span>
         {item.duration && <span className="media-live-card__duration">{item.duration}</span>}
       </div>
@@ -166,13 +185,15 @@ function MediaCard({ item, onOpen }) {
         <small>{item.category}{item.location ? ` · ${item.location}` : ''}</small>
         <h3>{item.title}</h3>
         <p>{item.description}</p>
-        <span className="media-live-card__source">{item.source_name}<ArrowUpRight size={15} /></span>
+        <span className="media-live-card__source">{premium ? 'Premium collection' : item.source_name}<ArrowUpRight size={15} /></span>
       </div>
     </button>
   )
 }
 
-function MediaViewer({ item, onClose }) {
+function MediaViewer({ item, onClose, isPremium }) {
+  const locked = isPremiumItem(item) && !isPremium
+
   useEffect(() => {
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -203,7 +224,9 @@ function MediaViewer({ item, onClose }) {
       <div className="media-viewer__panel">
         <button className="media-viewer__close" onClick={onClose} aria-label="Close media viewer" autoFocus><X size={22} /></button>
         <div className="media-viewer__stage">
-          {item.embed_url ? (
+          {locked ? (
+            <PremiumGate />
+          ) : item.embed_url ? (
             <iframe
               src={`${item.embed_url}?autoplay=1&rel=0`}
               title={item.title}
@@ -220,11 +243,11 @@ function MediaViewer({ item, onClose }) {
           ) : <Picture src={item.image} alt={item.title} className="media-viewer__image" />}
         </div>
         <div className="media-viewer__details">
-          <div><small>{item.media_type} · {item.category}</small><h2 id="media-viewer-title">{item.title}</h2><p id="media-viewer-description">{item.description}</p></div>
+          <div><small>{item.media_type} · {item.category}{isPremiumItem(item) ? ' · Premium' : ''}</small><h2 id="media-viewer-title">{item.title}</h2><p id="media-viewer-description">{item.description}</p></div>
           <div className="media-viewer__meta">
             {item.location && <span><MapPin size={15} />{item.location}</span>}
             <span>Source: {item.source_name}</span>
-            <a className="button button--gold button--small" href={item.source_url} target="_blank" rel="noreferrer">Open official source <ArrowUpRight size={16} /></a>
+            {!locked && <a className="button button--gold button--small" href={item.source_url} target="_blank" rel="noreferrer">Open official source <ArrowUpRight size={16} /></a>}
           </div>
         </div>
       </div>
@@ -232,12 +255,13 @@ function MediaViewer({ item, onClose }) {
   )
 }
 
-function PodcastStage({ podcasts }) {
+function PodcastStage({ podcasts, isPremium }) {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const safeIndex = podcasts.length ? Math.min(selectedIndex, podcasts.length - 1) : 0
   const selected = podcasts[safeIndex]
 
   if (!selected) return null
+  const locked = isPremiumItem(selected) && !isPremium
 
   return (
     <section className="media-podcast-stage">
@@ -250,11 +274,13 @@ function PodcastStage({ podcasts }) {
         <div className="media-podcast-player">
           <Picture src={selected.image} alt={selected.title} className="media-podcast-player__image" />
           <div className="media-podcast-player__copy">
-            <span>Episode {selected.number} · {selected.category}</span>
+            <span>Episode {selected.number} · {selected.category}{isPremiumItem(selected) ? ' · Premium' : ''}</span>
             <h3>{selected.title}</h3>
             <strong>{selected.guest}</strong>
             <p>{selected.description || 'A story from Malawi’s living cultural and natural heritage.'}</p>
-            {selected.audio_url ? (
+            {locked ? (
+              <PremiumGate compact />
+            ) : selected.audio_url ? (
               <div className="media-native-audio"><audio key={selected.audio_url} controls preload="metadata" src={selected.audio_url}>Your browser does not support audio playback.</audio></div>
             ) : (
               <div className="media-podcast-source">
@@ -271,9 +297,9 @@ function PodcastStage({ podcasts }) {
             <button key={episode.id || episode.title} type="button" className={safeIndex === index ? 'active' : ''} onClick={() => setSelectedIndex(index)}>
               <span>{episode.number}</span>
               <Picture src={episode.image} alt="" />
-              <div><strong>{episode.title}</strong><small>{episode.guest}</small></div>
+              <div><strong>{episode.title}</strong><small>{episode.guest}{isPremiumItem(episode) ? ' · Premium' : ''}</small></div>
               <span>{episode.length}</span>
-              <i>{episode.audio_url ? <Play size={15} fill="currentColor" /> : <ArrowRight size={16} />}</i>
+              <i>{isPremiumItem(episode) && !isPremium ? <LockKeyhole size={15} /> : episode.audio_url ? <Play size={15} fill="currentColor" /> : <ArrowRight size={16} />}</i>
             </button>
           ))}
         </div>
@@ -284,6 +310,7 @@ function PodcastStage({ podcasts }) {
 
 export default function MediaPage() {
   const { podcasts = [], mediaItems = [], source, loading } = useContent()
+  const { isPremium } = useSubscription()
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('All')
   const [activeMedia, setActiveMedia] = useState(null)
@@ -331,7 +358,7 @@ export default function MediaPage() {
           </div>
         </section>
 
-        <PodcastStage podcasts={podcasts} />
+        <PodcastStage podcasts={podcasts} isPremium={isPremium} />
 
         <section className="section section--ivory media-library-section">
           <div className="shell">
@@ -375,7 +402,7 @@ export default function MediaPage() {
         </section>
       </main>
       <MediaFooter />
-      {activeMedia && <MediaViewer item={activeMedia} onClose={() => setActiveMedia(null)} />}
+      {activeMedia && <MediaViewer item={activeMedia} isPremium={isPremium} onClose={() => setActiveMedia(null)} />}
     </>
   )
 }
