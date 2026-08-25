@@ -1,12 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import { fallbackContent, loadPublishedContent } from '../services/contentService'
+import { initialContent, loadPublishedContent } from '../services/contentService'
 
 const ContentContext = createContext(null)
 
 export function ContentProvider({ children }) {
-  const [content, setContent] = useState(fallbackContent)
-  const [source, setSource] = useState('local')
+  const [content, setContent] = useState(initialContent)
+  const [source, setSource] = useState('loading')
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -17,6 +17,9 @@ export function ContentProvider({ children }) {
         if (!active) return
         setContent(result.content)
         setSource(result.source)
+        setError(result.errors?.length
+          ? `Some public collections are temporarily unavailable: ${result.errors.map((item) => item.key).join(', ')}`
+          : null)
       })
       .catch((reason) => {
         if (!active) return
@@ -35,4 +38,3 @@ export function useContent() {
   if (!value) throw new Error('useContent must be used inside ContentProvider')
   return value
 }
-
