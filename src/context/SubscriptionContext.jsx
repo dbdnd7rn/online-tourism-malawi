@@ -15,6 +15,7 @@ export function SubscriptionProvider({ children }) {
   const [plans, setPlans] = useState([])
   const [subscriptions, setSubscriptions] = useState([])
   const [paymentOrders, setPaymentOrders] = useState([])
+  const [evaluatedAt, setEvaluatedAt] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -23,6 +24,7 @@ export function SubscriptionProvider({ children }) {
       setPlans([])
       setSubscriptions([])
       setPaymentOrders([])
+      setEvaluatedAt(null)
       setLoading(false)
       return
     }
@@ -38,6 +40,7 @@ export function SubscriptionProvider({ children }) {
       setPlans(nextPlans)
       setSubscriptions(nextSubscriptions)
       setPaymentOrders(nextOrders)
+      setEvaluatedAt(new Date().toISOString())
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Unable to load Premium membership.')
     } finally {
@@ -45,17 +48,24 @@ export function SubscriptionProvider({ children }) {
     }
   }, [previewMode, user])
 
-  useEffect(() => { refresh() }, [refresh])
+  useEffect(() => {
+    let cancelled = false
+    queueMicrotask(() => {
+      if (!cancelled) void refresh()
+    })
+    return () => { cancelled = true }
+  }, [refresh])
 
   const activeSubscription = useMemo(() => {
-    const now = Date.now()
+    if (!evaluatedAt) return null
+    const evaluatedAtMs = Date.parse(evaluatedAt)
     return subscriptions.find((subscription) => (
       subscription.status === 'active'
-      && new Date(subscription.starts_at).getTime() <= now
-      && new Date(subscription.expires_at).getTime() > now
+      && new Date(subscription.starts_at).getTime() <= evaluatedAtMs
+      && new Date(subscription.expires_at).getTime() > evaluatedAtMs
       && subscription.subscription_plans?.active !== false
     )) || null
-  }, [subscriptions])
+  }, [subscriptions, evaluatedAt])
 
   const value = useMemo(() => ({
     plans,
