@@ -63,7 +63,6 @@ export function SubscriptionProvider({ children }) {
       subscription.status === 'active'
       && new Date(subscription.starts_at).getTime() <= evaluatedAtMs
       && new Date(subscription.expires_at).getTime() > evaluatedAtMs
-      && subscription.subscription_plans?.active !== false
     )) || null
   }, [subscriptions, evaluatedAt])
 
