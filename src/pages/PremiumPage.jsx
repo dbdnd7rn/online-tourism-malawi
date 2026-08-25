@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Check, Crown, ExternalLink, LockKeyhole } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useSubscription } from '../context/SubscriptionContext'
 import { formatPlanPrice } from '../services/subscriptionService'
@@ -13,16 +13,44 @@ export default function PremiumPage() {
     isPremium,
     loading,
     error,
+    refresh,
     beginCheckout,
   } = useSubscription()
+  const [searchParams] = useSearchParams()
   const [currency, setCurrency] = useState('USD')
   const [submitting, setSubmitting] = useState(false)
   const [checkoutError, setCheckoutError] = useState('')
+  const paymentResult = searchParams.get('payment')
 
   const plan = useMemo(
     () => plans.find((item) => item.slug === 'premium-monthly') || plans[0] || null,
     [plans],
   )
+
+  useEffect(() => {
+    if (paymentResult !== 'success' || !user || isPremium) return undefined
+
+    let cancelled = false
+    let timer = null
+    let attempts = 0
+
+    const pollForActivation = async () => {
+      attempts += 1
+      await refresh()
+      if (!cancelled && attempts < 5) {
+        timer = window.setTimeout(() => { void pollForActivation() }, 1200)
+      }
+    }
+
+    queueMicrotask(() => {
+      if (!cancelled) void pollForActivation()
+    })
+
+    return () => {
+      cancelled = true
+      if (timer) window.clearTimeout(timer)
+    }
+  }, [paymentResult, user, isPremium, refresh])
 
   const expiry = activeSubscription?.expires_at
     ? new Intl.DateTimeFormat('en', { dateStyle: 'long' }).format(new Date(activeSubscription.expires_at))
@@ -52,15 +80,28 @@ export default function PremiumPage() {
           <span>One membership gives access to Premium films, audio, galleries and digital cultural experiences for the full access period.</span>
         </div>
 
+        {paymentResult === 'success' && (
+          <section className={`premium-return-notice ${isPremium ? 'premium-return-notice--active' : ''}`} role="status">
+            <Check size={22} />
+            <div>
+              <strong>{isPremium ? 'Payment confirmed — Premium is active' : 'Payment confirmed — activating Premium'}</strong>
+              <p>{isPremium ? 'Your membership is ready. Premium media and podcast locks are now removed.' : 'VAC Payments verified your transaction. We are syncing your membership now; this normally takes only a few seconds.'}</p>
+            </div>
+          </section>
+        )}
+
         {isPremium ? (
           <section className="premium-active-card">
             <Check size={28} />
             <div>
               <strong>Premium is active</strong>
               <p>Your current access remains active until {expiry}.</p>
-              <button className="button button--gold" type="button" onClick={startCheckout} disabled={!plan || submitting}>
-                {submitting ? 'Opening checkout…' : 'Renew Premium'}
-              </button>
+              <div className="premium-active-actions">
+                <Link className="button button--gold" to="/media-library">Explore Premium collection</Link>
+                <button className="button premium-renew-button" type="button" onClick={startCheckout} disabled={!plan || submitting}>
+                  {submitting ? 'Opening checkout…' : 'Renew Premium'}
+                </button>
+              </div>
             </div>
           </section>
         ) : (
