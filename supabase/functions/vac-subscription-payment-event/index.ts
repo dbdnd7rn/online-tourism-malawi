@@ -52,6 +52,13 @@ async function serviceRequest(path: string, init: RequestInit) {
   })
 }
 
+function publicCallbackPath(request: Request) {
+  const runtimePath = new URL(request.url).pathname
+  return runtimePath.startsWith('/functions/v1/')
+    ? runtimePath
+    : `/functions/v1${runtimePath.startsWith('/') ? runtimePath : `/${runtimePath}`}`
+}
+
 async function authenticateVacEvent(request: Request, rawBody: string) {
   const expectedAppId = Deno.env.get('VAC_APP_ID')?.trim() || 'online-tourism'
   const appSecret = requiredEnv('VAC_APP_SECRET')
@@ -71,7 +78,7 @@ async function authenticateVacEvent(request: Request, rawBody: string) {
   if (!/^[0-9a-f-]{36}$/.test(nonce)) throw new Error('VAC callback nonce is invalid.')
   if (!/^[0-9a-f]{64}$/.test(suppliedSignature)) throw new Error('VAC callback signature is invalid.')
 
-  const canonical = [String(timestamp), nonce, 'POST', new URL(request.url).pathname, rawBody].join('.')
+  const canonical = [String(timestamp), nonce, 'POST', publicCallbackPath(request), rawBody].join('.')
   const expectedSignature = await hmacSha256Hex(appSecret, canonical)
   if (!constantTimeEqual(expectedSignature, suppliedSignature)) throw new Error('VAC callback signature verification failed.')
   return appId
