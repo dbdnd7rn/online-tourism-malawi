@@ -29,8 +29,11 @@ const tables = {
   podcasts: 'podcasts',
 }
 
+export const emptyContent = Object.fromEntries(Object.keys(tables).map((key) => [key, []]))
+export const initialContent = supabase ? emptyContent : fallbackContent
+
 export async function loadPublishedContent() {
-  if (!supabase) return { content: fallbackContent, source: 'local' }
+  if (!supabase) return { content: fallbackContent, source: 'local', errors: [] }
 
   const entries = await Promise.all(
     Object.entries(tables).map(async ([key, table]) => {
@@ -43,19 +46,25 @@ export async function loadPublishedContent() {
           .order('sort_order', { ascending: true })
 
         if (error) throw error
-        return { key, value: data?.length ? data : fallbackContent[key], remote: Boolean(data?.length) }
+        return { key, value: data ?? [], error: null }
       } catch (error) {
-        console.warn(`Unable to load ${table}; using curated fallback content.`, error)
-        return { key, value: fallbackContent[key], remote: false }
+        console.error(`Unable to load ${table}; keeping this public collection unavailable.`, error)
+        return {
+          key,
+          value: [],
+          error: error instanceof Error ? error.message : `Unable to load ${table}`,
+        }
       }
     }),
   )
 
-  const remoteCount = entries.filter((entry) => entry.remote).length
-  const source = remoteCount === entries.length ? 'supabase' : remoteCount > 0 ? 'hybrid' : 'local'
+  const errors = entries
+    .filter((entry) => entry.error)
+    .map((entry) => ({ key: entry.key, message: entry.error }))
 
   return {
     content: Object.fromEntries(entries.map(({ key, value }) => [key, value])),
-    source,
+    source: errors.length ? 'degraded' : 'supabase',
+    errors,
   }
 }
