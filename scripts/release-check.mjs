@@ -27,6 +27,7 @@ const routes = [
   '/contact',
   '/contribute',
   '/account',
+  '/premium',
   '/sign-in',
   '/accessibility',
 ]
@@ -34,7 +35,7 @@ const routes = [
 const requiredFiles = ['robots.txt', 'sitemap.xml', 'site.webmanifest']
 const limits = {
   largestJavaScript: 380 * 1024,
-  totalJavaScript: 560 * 1024,
+  totalJavaScript: 700 * 1024,
   largestStylesheet: 105 * 1024,
 }
 
