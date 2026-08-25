@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 
 const App = lazy(() => import('./App'))
+const GlobalSearchPage = lazy(() => import('./pages/GlobalSearchPage'))
 const MediaPage = lazy(() => import('./pages/MediaPage'))
 const PremiumPage = lazy(() => import('./pages/PremiumPage'))
 
@@ -21,7 +22,11 @@ export default function RootApp() {
           <MediaPage />
           <Link className="premium-floating-link" to="/premium">Premium</Link>
         </>
-      ) : location.pathname === '/premium' ? <PremiumPage /> : <App />}
+      ) : location.pathname === '/premium' ? (
+        <PremiumPage />
+      ) : location.pathname === '/search' ? (
+        <GlobalSearchPage />
+      ) : <App />}
     </Suspense>
   )
 }
